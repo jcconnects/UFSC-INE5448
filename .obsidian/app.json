@@ -1,0 +1,11 @@
+{
+  "trashOption": "local",
+  "newFileLocation": "current",
+  "attachmentFolderPath": "./attachments",
+  "promptDelete": false,
+  "alwaysUpdateLinks": true,
+  "propertiesInDocument": "source",
+  "showLineNumber": false,
+  "strictLineBreaks": true,
+  "vimMode": false
+}

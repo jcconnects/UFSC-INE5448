@@ -1,0 +1,184 @@
+{
+  "main": {
+    "id": "4b10d76a829d82a4",
+    "type": "split",
+    "children": [
+      {
+        "id": "6ea6b597e3bcaf61",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "20a44f0be626c574",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "abb11a48302fed9c",
+    "type": "mobile-drawer",
+    "children": [
+      {
+        "id": "f560a81939f26603",
+        "type": "leaf",
+        "state": {
+          "type": "file-explorer",
+          "state": {
+            "sortOrder": "alphabeticalReverse",
+            "autoReveal": false
+          },
+          "icon": "lucide-folder-closed",
+          "title": "Files"
+        }
+      },
+      {
+        "id": "1befb41ba222d190",
+        "type": "leaf",
+        "state": {
+          "type": "search",
+          "state": {
+            "query": "",
+            "matchingCase": false,
+            "explainSearch": false,
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical"
+          },
+          "icon": "lucide-search",
+          "title": "Search"
+        }
+      },
+      {
+        "id": "b4b77361c11680d0",
+        "type": "leaf",
+        "state": {
+          "type": "tag",
+          "state": {
+            "sortOrder": "frequency",
+            "useHierarchy": true
+          },
+          "icon": "lucide-tags",
+          "title": "Tags"
+        }
+      },
+      {
+        "id": "d700217b2b65e916",
+        "type": "leaf",
+        "state": {
+          "type": "bookmarks",
+          "state": {},
+          "icon": "lucide-file",
+          "title": "Plugin no longer active"
+        }
+      }
+    ],
+    "currentTab": 0
+  },
+  "right": {
+    "id": "c430d5fd46f19c49",
+    "type": "mobile-drawer",
+    "children": [
+      {
+        "id": "3829f8e8cdc85766",
+        "type": "leaf",
+        "state": {
+          "type": "backlink",
+          "state": {
+            "file": "Anotações/Finanças/2025-02-07 - Reunião de alinhamento Próprio Capital.md",
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical",
+            "showSearch": false,
+            "searchQuery": "",
+            "backlinkCollapsed": false,
+            "unlinkedCollapsed": true
+          },
+          "icon": "links-coming-in",
+          "title": "Backlinks"
+        }
+      },
+      {
+        "id": "096e3c9dfb41fb1e",
+        "type": "leaf",
+        "state": {
+          "type": "outgoing-link",
+          "state": {
+            "linksCollapsed": false,
+            "unlinkedCollapsed": true
+          },
+          "icon": "links-going-out",
+          "title": "Outgoing links"
+        }
+      },
+      {
+        "id": "e86ae80a3fec81be",
+        "type": "leaf",
+        "state": {
+          "type": "outline",
+          "state": {},
+          "icon": "lucide-list",
+          "title": "Outline"
+        }
+      },
+      {
+        "id": "02a37b5a31cd3dbc",
+        "type": "leaf",
+        "state": {
+          "type": "smart-connections-view",
+          "state": {},
+          "icon": "lucide-file",
+          "title": "Plugin no longer active"
+        }
+      },
+      {
+        "id": "b0c9f31da7933e34",
+        "type": "leaf",
+        "state": {
+          "type": "smart-chat-view",
+          "state": {},
+          "icon": "lucide-file",
+          "title": "Plugin no longer active"
+        }
+      }
+    ],
+    "currentTab": 0
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "command-palette:Open command palette": false,
+      "pdf-plus:PDF++: Toggle auto-copy": false,
+      "pdf-plus:PDF++: Toggle auto-focus": false,
+      "pdf-plus:PDF++: Toggle auto-paste": false
+    }
+  },
+  "active": "1befb41ba222d190",
+  "lastOpenFiles": [
+    "Logosofia/2025/2025-08-11 - 11 de Agosto.md",
+    "Mundo Comum/Finanças/Planejamento Financeiro.md",
+    "Contas.md",
+    "Logosofia/2025/Diárias/2025-07-29 - M6 - Classe Especial do Brasil.md",
+    "Logosofia/2025/Diárias/2025-07-31 - SA - Capacitação -.md",
+    "Alto Impacto Empresarial.md",
+    "Untitled",
+    "2 - Anotações de Reuniões/2025-07-17 - SA - Capacitação - Planejamento do próximo semestre.md",
+    "2 - Anotações de Reuniões/2025-06-12 - SA - Capacitação - Força do Afeto.md",
+    "Logosofia/Anotações/2025-03-20 - Tertúlia - A Divina Arquitetura do Ser Humano.md",
+    "Logosofia/Anotações/2025-03-22 - SJ - Uni - Planejamento.md",
+    "Anotações/Dominando o Obsidian/Estratégia de Organização de Notas Logosóficas.md",
+    "Logosofia/Anotações/attachments/1951-04-11.pdf",
+    "Logosofia/Anotações/2025-02-20 - SA - A expulsão de Adão do paraíso.md",
+    "Logosofia/Anotações/2025-02-20 - Tertúlia - Alegria.md",
+    "Logosofia/Anotações/2025-02-13 - Par - O manejo do movimento da vida.md",
+    "Logosofia/Anotações/2025-01-11 - Conversa com o Vô Roseno.md",
+    "Anotações/Finanças/2025-02-07 - Reunião de alinhamento Próprio Capital.md"
+  ]
+}

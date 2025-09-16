@@ -1,0 +1,10 @@
+{
+  "translucency": false,
+  "theme": "obsidian",
+  "baseFontSizeAction": false,
+  "cssTheme": "",
+  "accentColor": "",
+  "enabledCssSnippets": [
+    "custom-style"
+  ]
+}

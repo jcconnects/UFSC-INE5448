@@ -1,0 +1,36 @@
+/* H1 - Pink */
+.markdown-preview-view h1,
+.cm-header-1 {
+  color: #FF52EF; 
+}
+
+/* H2 - Purple */
+.markdown-preview-view h2,
+.cm-header-2 {
+  color: #B47BF4; 
+}
+
+/* H3 - Blue */
+.markdown-preview-view h3,
+.cm-header-3 {
+  color: #2E80F2; 
+}
+
+/* H4 - Yellow */
+.markdown-preview-view h4,
+.cm-header-4 {
+  color: #E5B567; 
+}
+
+/* H5 - Green */
+.markdown-preview-view h5,
+.cm-header-5 {
+  color: #E83E3E; 
+}
+
+/* Bold */
+.markdown-preview-view b,
+.cm-strong {
+  color: #FF82B2; 
+}
+

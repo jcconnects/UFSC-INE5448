@@ -1,0 +1,217 @@
+{
+  "main": {
+    "id": "1ce735013cb0dedd",
+    "type": "split",
+    "children": [
+      {
+        "id": "0898a357fe7e03f0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "849592498f029d8a",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "edda215eeab96936",
+    "type": "split",
+    "children": [
+      {
+        "id": "7b1000a79f3649be",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "02d3e58c7df9a9de",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabeticalReverse",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "a807c6d989921df4",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "\"mais além\"",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 342.5
+  },
+  "right": {
+    "id": "630d56ddec6eaa06",
+    "type": "split",
+    "children": [
+      {
+        "id": "1b067ae35a24a225",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1070a6ca9ce86c2f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Mundo Comum/Task Manager.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Task Manager"
+            }
+          },
+          {
+            "id": "140b8824746448b6",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Anotações/Logosofia/2025-01-30 - SA -.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from 2025-01-30 - SA -"
+            }
+          },
+          {
+            "id": "33b74e5f06dc0076",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "87c26243d37b8f29",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Logosofia/Anotações/2025-03-13 - SA - Capacitação - Biognoses.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for 2025-03-13 - SA - Capacitação - Biognoses"
+            }
+          },
+          {
+            "id": "453493860f888032",
+            "type": "leaf",
+            "state": {
+              "type": "mermaid-toolbar-view",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "Plugin no longer active"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 346.5,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "command-palette:Open command palette": false,
+      "switcher:Open quick switcher": false,
+      "pdf-plus:PDF++: Toggle auto-copy": false,
+      "pdf-plus:PDF++: Toggle auto-focus": false,
+      "pdf-plus:PDF++: Toggle auto-paste": false,
+      "mermaid-tools:Open Mermaid Toolbar": false
+    }
+  },
+  "active": "849592498f029d8a",
+  "lastOpenFiles": [
+    "01-Introdução.md",
+    "01-Introducao.pdf",
+    "Unidade 1/attachments/Simulation Modeling and Analysis.pdf",
+    "Unidade 1/attachments/Introduction to Modeling and Simulation.pdf",
+    "Unidade 1/2025-08-14 - Unidade 1.md",
+    "Unidade 1/attachments",
+    "Unidade 1",
+    "Logosofia/2025/2025-08-12 - M6 - Classe Especial do Brasil.md",
+    "Mundo Comum/Task Manager.md",
+    "Logosofia/Livros Logosofia/O-Senhor-de-Sándara.pdf",
+    "Logosofia/2025/2025-07-29 - M6 - Classe Especial do Brasil.md",
+    "Logosofia/2025/2025-08-11 - 11 de Agosto.md",
+    "Mundo Comum/Finanças/Planejamento Financeiro.md",
+    "Mundo Comum/Contas.md",
+    "Mundo Comum/Finanças/2025-02-07 - Reunião de alinhamento Próprio Capital.md",
+    "Logosofia/2025/2025-08-09 - Semanal.md",
+    "Logosofia/2025/2025-08-02 - SJ -  Realidade do mundo metafísico.md",
+    "Logosofia/2025/2025-08-05 - M6 - Classe Especial do Brasil.md",
+    "Logosofia/2025/2025-08-06 - SJ - Preparo para direção.md",
+    "Logosofia/2025/2025-08-07 - SA - Capacitação - Estimular o Despertar da Vida Superior do Adolescente.md",
+    "Pessoas/André Paganelli.md",
+    "Logosofia/2025/2025-08-09 - 5 Simpósio Docente - A Divina Arquitetura Do Ser Humano Frente Às Correntes Ideológicas.md",
+    "Logosofia/2025/attachments/2025-08-09 - Ensinamentos de fácil aplicação.pdf",
+    "Logosofia/2025/2025-08-07 - SIP - Reunião 5 -  A Seleção e o Sentimentalismo.md",
+    "Logosofia/2025/2025-08-07 - Tertúlia - O Grande Espírito Precursor de Rumos e Destinos.md",
+    "Anotações Notion/Ago - Semana 2 fd7e189562774390878b9d937bdc0914/plano_de_estudos.pdf",
+    "Logosofia/Livros Logosofia/Bases-para-Sua-Conduta.pdf",
+    "Anotações Notion/Ago - Semana 2 fd7e189562774390878b9d937bdc0914.md",
+    "Anotações Notion/Ago - Semana 2 fd7e189562774390878b9d937bdc0914/bibliografia.pdf",
+    "Mundo Comum/Alto Impacto Empresarial.md",
+    "Logosofia/2025/Diárias/2025-08-09 - 5 Simpósio Docente - A Divina Arquitetura Do Ser Humano Frente Às Correntes Ideológicas.md",
+    "Logosofia/2025/2025-07-31 - Tertúlia - Correntes Religiosas.md",
+    "Logosofia/2025/2025-07-19 - SJ - Dificuldade e Lutas - Faculdade de Sofrer.md",
+    "Logosofia/2025/2025-07-17 - Tertúlia - Técnica para analisar as Correntes Mentais.md",
+    "Logosofia/2025/2025-07-17 - SIP - Reunião 4 - Quatro pontos vitais da preparação.md",
+    "Logosofia/2025/attachments/2025-07-17 - Tertúlia - Técnica para analisar as Correntes Mentais.jpg",
+    "Logosofia/2025/attachments/2025-03-11 - Exp - Agenda.png",
+    "Logosofia/2025/attachments/2025-02-13 - Par - Imagem Capitão.png",
+    "Logosofia/2025/attachments/2025-02-13 - Print de Whatsapp.png",
+    "Logosofia/2025/attachments/2025-02-13 - Imagem da adolescência.png",
+    "Logosofia/2025/Diárias/attachments/2025-07-17 - Tertúlia - Técnica para analisar as Correntes Mentais.jpg",
+    "Untitled 1.canvas",
+    "Untitled.canvas",
+    "Logosofia/2025/Diárias/attachments/2025-03-11 - Exp - Agenda.png",
+    "Logosofia/2025/Diárias/attachments/2025-02-13 - Par - Imagem Capitão.png",
+    "Logosofia/2025/Diárias/attachments/2025-02-13 - Imagem da adolescência.png",
+    "Logosofia/Anotações/attachments/Selfie 2025-02-28 at 19.05.05.png"
+  ]
+}

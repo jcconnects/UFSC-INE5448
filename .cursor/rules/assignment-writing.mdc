@@ -1,0 +1,14 @@
+---
+globs: atividade_1.md
+description: Regras para redigir respostas da Atividade 1 (IA/ML/DL)
+---
+## Diretrizes para `atividade_1.md`
+- **Língua e tom**: pt-BR, direto e didático, “com minhas palavras”.
+- **Estrutura**: manter seções por enunciado (Parte 1–4) com `##`/`###`.
+- **Listas**: quando o item pedir (ex.: 2a/2b), usar bullets claros:
+  - “Onde é aplicado”
+  - “Impacto para usuários/organizações”
+- **Referências**: ao final do trabalho, em formato ABNT; citar autores conforme enunciado.
+- **Coesão**: evitar jargão excessivo; definir termos a primeira vez que surgirem.
+- **Consistência**: exemplos concretos e breves; evitar redundâncias entre IA, ML e DL.
+
