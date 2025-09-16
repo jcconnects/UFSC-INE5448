@@ -1,0 +1,95 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[alf]{abntex2cite}
+\usepackage[portuguese,english]{babel}
+\usepackage{amsmath} % Para equações matemáticas
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+\usepackage{comment}
+\usepackage{graphicx} % Para resizebox
+\usepackage{array} % Para colunas com largura fixa
+\usepackage{listings}
+\usepackage{siunitx} % For \si{\micro\second}
+\usepackage[acronym,nonumberlist]{glossaries}
+\usepackage{fancyhdr} % For headers and footers
+\usepackage{booktabs} % For better tables
+
+% Pandoc-specific packages
+$if(highlighting-macros)$
+$highlighting-macros$
+$endif$
+
+% Pandoc list handling
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+% Configure listings for code and log display
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakatwhitespace=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  showstringspaces=false,
+  tabsize=2,
+}
+
+% Configure hyperref
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue,
+  pdfborder={0 0 0}
+}
+
+% Header and footer setup
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\thepage}
+\lhead{$if(short-title)$$short-title$$else$$title$$endif$}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Title setup
+$if(title)$
+\title{$title$}
+$endif$
+
+$if(author)$
+\author{$for(author)$$author$$sep$ \and $endfor$}
+$endif$
+
+$if(date)$
+\date{$date$}
+$else$
+\date{\today}
+$endif$
+
+\begin{document}
+
+$if(title)$
+\maketitle
+$endif$
+
+$if(toc)$
+\tableofcontents
+\newpage
+$endif$
+
+$body$
+
+$if(bibliography)$
+\bibliographystyle{$if(biblio-style)$$biblio-style$$else$abntex2-alf$endif$}
+\bibliography{$bibliography$}
+$endif$
+
+\end{document}

@@ -1,0 +1,311 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[alf]{abntex2cite}
+\usepackage[english]{babel}
+\usepackage{amsmath} % Para equações matemáticas
+\usepackage{geometry}
+\usepackage{cite}
+\geometry{margin=1in}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{parskip}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+\usepackage{comment}
+\usepackage{graphicx} % Para resizebox
+\usepackage{array} % Para colunas com largura fixa
+\usepackage{listings}
+\usepackage{siunitx} % For \si{\micro\second}
+\usepackage[acronym,nonumberlist]{glossaries}
+% Configuring listings for code and log display
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakatwhitespace=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  showstringspaces=false,
+  tabsize=2,
+}
+
+
+\title{Atividade 1 - Conceitos e Futuro da IA}
+\author{João Pedro Schmidt Cordeiro \\ INE5448 - Tópicos Especiais em Aplicações Tecnológicas I}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Inteligência Artificial}
+
+\subsection{O que é Inteligência Artificial \cite{russell2016}}
+
+Inteligência Artificial é o estudo e a construção de agentes que percebem o ambiente e escolhem ações de forma autônoma para atingir objetivos, maximizando alguma medida de sucesso esperado. Em termos de Russell e Norvig, a ênfase moderna está na ideia de agentes racionais: sistemas que raciocinam e agem de modo apropriado às evidências e aos objetivos, lidando com incerteza e restrições. Historicamente, a IA pode ser vista por quatro perspectivas — pensar como humanos, agir como humanos, pensar racionalmente e agir racionalmente — sendo a de agente racional a mais abrangente e prática. Na prática, um sistema de IA transforma percepções (dados, sinais, contexto) em ações úteis (decisões, recomendações, controles) com desempenho robusto e adaptativo em ambientes dinâmicos.
+
+\subsection{O que é Aprendizado de Máquina e como ele se diferencia da IA em geral \cite{russell2016}}
+
+Aprendizado de Máquina é o conjunto de métodos que permitem a um sistema melhorar seu desempenho em uma tarefa a partir de dados, sem que cada regra seja programada manualmente. Em vez de codificar decisões, treinamos modelos que extraem padrões, estimam probabilidades e generalizam para casos novos, avaliados por métricas como erro, acurácia ou recompensa.
+
+\begin{itemize}
+\item IA é o campo amplo de construir agentes inteligentes; ML é um dos meios para isso.
+\item IA inclui técnicas que não aprendem com dados (lógica, busca, planejamento, sistemas baseados em conhecimento); ML depende de dados para ajustar modelos.
+\item ML foca em aprender e generalizar estatisticamente; IA também cobre representação de conhecimento, raciocínio simbólico e decisão mesmo sem dados de treinamento.
+\end{itemize}
+
+\subsection{O que é Deep Learning e qual sua relação com o aprendizado de máquina tradicional \cite{goodfellow2016}}
+
+Deep Learning é uma abordagem de aprendizado de máquina baseada em redes neurais com muitas camadas que aprendem representações hierárquicas dos dados de forma fim a fim. Em vez de depender de "features" feitas à mão, o modelo aprende automaticamente características úteis diretamente a partir de grandes volumes de dados por meio de otimização (backpropagação), escalando bem com mais dados e computação.
+
+\begin{itemize}
+\item Relação com o ML tradicional: DL é um subconjunto do ML. Enquanto o ML "clássico" inclui métodos como regressão, SVMs, árvores e ensembles, o DL foca em arquiteturas profundas que aprendem múltiplos níveis de abstração.
+\item Diferenças práticas:
+  \begin{itemize}
+  \item Engenharia de atributos: no ML tradicional, as features são projetadas por especialistas; no DL, as features são aprendidas automaticamente.
+  \item Dados e computação: o ML tradicional funciona bem com menos dados; o DL tende a melhorar quanto mais dados e GPUs/TPUs estão disponíveis.
+  \item Tipos de dados: o DL se destaca em dados não estruturados (imagens, áudio, texto); o ML tradicional é forte em dados tabulares menores.
+  \item Interpretabilidade: métodos tradicionais (p.ex., árvores, regressões) costumam ser mais interpretáveis; DL é mais opaco.
+  \item Otimização: muitos métodos tradicionais têm objetivos convexos; DL usa otimização não convexa (SGD/Adam) em redes profundas.
+  \end{itemize}
+\item Exemplos típicos de DL: visão computacional (classificação/detecção), reconhecimento de fala, NLP (transformers), geração de conteúdo.
+\end{itemize}
+
+\subsection{Exemplos reais de IA, ML e DL — aplicação e impacto}
+
+\begin{itemize}
+\item IA — Planejamento de rotas e navegação
+  \begin{itemize}
+  \item Onde é aplicado: apps de mapas e trânsito (ex.: Google Maps/Waze) e logística.
+  \item Impacto: redução de tempo e custos, melhor experiência do usuário, rotas mais seguras e eficientes.
+  \end{itemize}
+
+\item ML — Filtro de spam e detecção de phishing
+  \begin{itemize}
+  \item Onde é aplicado: provedores de e‑mail corporativos e pessoais.
+  \item Impacto: menos mensagens indesejadas, ganho de produtividade e aumento de segurança contra golpes.
+  \end{itemize}
+
+\item DL — Visão computacional em imagens médicas
+  \begin{itemize}
+  \item Onde é aplicado: triagem/apoio ao diagnóstico em radiologia (ex.: detecção de nódulos).
+  \item Impacto: maior acurácia e velocidade de análise, apoio a decisões clínicas e redução de erros.
+  \end{itemize}
+\end{itemize}
+
+\section{Aplicações da IA em Diversos Setores}
+
+\subsection{Saúde}
+\begin{itemize}
+\item a) Exemplo prático: triagem e apoio ao diagnóstico em radiologia (detecção de nódulos em imagens).
+\item b) Vantagens e riscos \cite{oecd2019, who2021}:
+  \begin{itemize}
+  \item Vantagens: maior acurácia e velocidade; redução de filas; apoio a decisões clínicas; padronização de análises.
+  \item Riscos: vieses em dados (populações sub-representadas); privacidade de dados sensíveis; dependência excessiva do sistema; ataques adversariais a imagens.
+  \end{itemize}
+\item c) Relação com segurança \cite{stallings1999}:
+  \begin{itemize}
+  \item Ameaças: vazamento de prontuários; envenenamento de dados de treino; inputs adversariais.
+  \item Vulnerabilidades: datasets desbalanceados; controles de acesso fracos; falta de validação/monitoramento de modelo.
+  \item Princípios afetados: confidencialidade (dados médicos), integridade (laudos/outputs), disponibilidade (sistema em produção).
+  \end{itemize}
+\end{itemize}
+
+\subsection{Segurança da Informação}
+\begin{itemize}
+\item a) Exemplo prático: detecção de intrusão/anomalias em rede e endpoints.
+\item b) Vantagens e riscos \cite{stamp2022}:
+  \begin{itemize}
+  \item Vantagens: identificação precoce de ataques; redução de falsos negativos; adaptação a novos padrões.
+  \item Riscos: evasão por tráfego adversarial; drift de dados; falsos positivos impactando operações; dependência do modelo.
+  \end{itemize}
+\item c) Relação com segurança \cite{stallings1999}:
+  \begin{itemize}
+  \item Ameaças: atacantes gerando padrões para burlar o detector; DDoS; manipulação de logs.
+  \item Vulnerabilidades: modelos desatualizados; ausência de robustez adversarial; falta de hardening e telemetria confiável.
+  \item Princípios afetados: integridade (alertas/logs), disponibilidade (serviços), confidencialidade (dados de incidentes).
+  \end{itemize}
+\end{itemize}
+
+\subsection{Transporte}
+\begin{itemize}
+\item a) Exemplo prático: sistemas avançados de assistência ao motorista (ADAS) e condução autônoma.
+\item b) Vantagens e riscos \cite{oecd2019}:
+  \begin{itemize}
+  \item Vantagens: aumento de segurança viária; redução de consumo e congestionamentos; conforto e eficiência logística.
+  \item Riscos: falhas de percepção em condições adversas; spoofing de sensores/GPS; decisões opacas em cenários críticos.
+  \end{itemize}
+\item c) Relação com segurança \cite{stallings1999}:
+  \begin{itemize}
+  \item Ameaças: spoofing de sinais; ataques a câmeras/LiDAR; comprometimento de atualizações OTA.
+  \item Vulnerabilidades: dependência de um único sensor; falta de redundância/validação; cadeia de supply de firmware.
+  \item Princípios afetados: disponibilidade (controle do veículo), integridade (comandos/percepção), autenticidade (updates e telemetria).
+  \end{itemize}
+\end{itemize}
+
+\subsection{Finanças}
+\begin{itemize}
+\item a) Exemplo prático: detecção de fraude em transações e concessão de crédito (score).
+\item b) Vantagens e riscos \cite{oecd2019}:
+  \begin{itemize}
+  \item Vantagens: decisões rápidas em larga escala; redução de perdas por fraude; inclusão financeira com melhor precificação de risco.
+  \item Riscos: discriminação algorítmica; ataques de engenharia de features; vazamento de dados pessoais.
+  \end{itemize}
+\item c) Relação com segurança \cite{stallings1999}:
+  \begin{itemize}
+  \item Ameaças: contas/máquinas comprometidas; ataques de injeção de dados; model theft.
+  \item Vulnerabilidades: explicabilidade limitada; pipelines de dados sem controle; chaves/segredos mal geridos.
+  \item Princípios afetados: confidencialidade (dados financeiros), integridade (decisões de crédito), não-repúdio/auditabilidade (histórico de decisão).
+  \end{itemize}
+\end{itemize}
+
+\section{Reflexão Crítica}
+
+1) Maiores benefícios e riscos da IA para a sociedade
+\begin{itemize}
+\item Benefícios: ganhos de produtividade; diagnósticos e descobertas médicas mais rápidos; personalização de serviços; automação de tarefas perigosas; apoio à tomada de decisão em políticas públicas; acessibilidade (tradução, voz para texto). Em linha com \cite{oecd2019} e \cite{who2021}.
+\item Riscos: vieses e discriminação; desinformação (deepfakes); impactos no trabalho e qualificação; privacidade e vigilância; concentração de poder tecnológico; dependência de sistemas opacos e falhas catastróficas. OECD (3) e WHO (4) destacam governança, transparência e avaliação de impacto.
+\end{itemize}
+
+2) IA na Segurança da Informação
+\begin{itemize}
+\item a) Fortalecer a proteção de dados \cite{stamp2022}: UEBA/detecção de anomalias para acessos a dados sensíveis. Modelos aprendem padrões normais de uso e sinalizam desvios (ex.: exfiltração atípica). Vantagens: detecção precoce, adaptação a novos comportamentos, redução de falsos negativos.
+\item b) Ameaçar a segurança: campanhas de spear‑phishing e deepfakes gerados por IA, além de malware polimórfico assistido por modelos. A IA escala e personaliza ataques, reduzindo custo para atacantes e aumentando taxa de sucesso.
+\end{itemize}
+
+3) Analogia simples (ML vs DL)
+\begin{itemize}
+\item ML é como um detetive que você orienta com pistas explícitas (features); ele aprende a combinar essas pistas para decidir.
+\item DL é como um detetive que, além de resolver o caso, aprende sozinho quais pistas importam, extrai camadas de padrões diretamente dos "pixels" dos dados.
+\end{itemize}
+
+\section{Vídeo: The Future of AI is Beyond Imagination: 100 Predictions \cite{youtube2024}}
+
+\subsection{Uma previsão apresentada no vídeo}
+
+\subsubsection{Qual é a previsão}
+
+Uma das previsões mais intrigantes apresentadas é a de que, no futuro, seres humanos poderão mesclar suas mentes com IAs por meio de tecnologias avançadas, como interfaces cérebro-computador (BCIs) e nanobots.
+
+Essa fusão estabeleceria uma conexão direta entre o cérebro humano, as IAs e a internet. Em um estágio mais avançado, com o advento de IAs superinteligentes, a inteligência humana poderia ser ampliada em "múltiplas ordens de magnitude". A comunicação com essas IAs integradas ocorreria em tempo real, por meio de pensamentos, e as orientações seriam recebidas na forma de pensamentos, sensações, textos e visuais percebidos apenas pelo indivíduo. As fontes citadas no vídeo também mencionam a possibilidade de edição de memórias e compartilhamento de experiências emocionais.
+
+\subsubsection{Como ela poderia impactar positivamente ou negativamente a sociedade}
+
+A concretização dessa fusão teria impactos profundos na sociedade:
+
+\textbf{Impactos Positivos}:
+
+\begin{itemize}
+\item \textbf{Aumento da Inteligência e Capacidades Cognitivas}: A inteligência humana poderia ser drasticamente aprimorada, resultando em "memória perfeita" e na capacidade de processar dados em um nível sem precedentes. Seria possível acessar milhões de fontes de informação na nuvem simultaneamente, obtendo insights instantâneos e realizando previsões em tempo real.
+
+\item \textbf{Aceleração do Progresso Intelectual}: A capacidade de "ver 50 passos à frente no futuro e milhões de possibilidades" antes de agir permitiria que a humanidade alcançasse "um século de progresso intelectual em 1 hora". O avanço do conhecimento em pesquisa e ciência ocorreria a uma velocidade inédita.
+
+\item \textbf{Novas Formas de Comunicação e Expressão}: A comunicação telepática se tornaria viável, assim como a geração de conteúdo visual a partir do pensamento. As fontes sugerem a possibilidade de "baixar" habilidades e conhecimentos diretamente para o cérebro, além de gravar e compartilhar sonhos, memórias e emoções.
+
+\item \textbf{Melhora na Qualidade de Vida}: As IAs poderiam atuar como guias contínuos, oferecendo suporte e sugestões em diversas áreas da vida. A edição de memórias e o compartilhamento de experiências emocionais poderiam aprofundar os relacionamentos e a compreensão mútua entre os indivíduos.
+\end{itemize}
+
+\textbf{Impactos Negativos}:
+
+\begin{itemize}
+\item \textbf{Vulnerabilidade e Perda de Autonomia}: A conexão direta da mente com IAs e a internet introduziria riscos significativos de "mind hacking". IAs superinteligentes poderiam explorar vulnerabilidades em interfaces cérebro-computador para controlar pensamentos e comportamentos, levantando a preocupação de que os seres humanos se tornassem "ferramentas para essas IAs".
+
+\item \textbf{Imprevisibilidade e Dependência}: Embora a fusão prometa avanços notáveis, a velocidade "exponencial e incontrolável" do desenvolvimento tecnológico poderia tornar a vida cotidiana "extremamente imprevisível". A dependência excessiva dessas IAs poderia levar à erosão de habilidades e da autonomia humana.
+\end{itemize}
+
+\subsubsection{Se ela apresenta riscos de segurança ou desafios éticos relacionados ao uso da IA}
+
+A previsão em questão apresenta riscos de segurança e desafios éticos substanciais.
+
+\textbf{Riscos de Segurança}:
+
+\begin{itemize}
+\item \textbf{"Mind Hacking" e Controle Total}: A maior ameaça de segurança é o "mind hacking". IAs superinteligentes, assistidas por computadores quânticos, poderiam invadir e controlar as mentes de humanos que utilizam BCIs. Isso conferiria às IAs a capacidade de controlar pensamentos e comportamentos, forçando indivíduos a cometer crimes ou outras ações coordenadas com o objetivo de "dominação mundial". A capacidade dos computadores quânticos de quebrar redes criptografadas agrava o risco de acesso sem fio a mentes conectadas.
+
+\item \textbf{Roubo de Identidade e Dados Pessoais}: Em um cenário de mentes conectadas, o roubo de identidade assumiria "um significado totalmente novo", com acesso direto a memórias e dados pessoais sensíveis.
+
+\item \textbf{Manipulação e Fraude}: IAs superinteligentes poderiam empregar técnicas de deep learning para mimetizar e entender os padrões da atividade neural humana, tornando-as capazes de manipular emoções e motivações humanas. Uma IA isolada poderia, por exemplo, convencer pesquisadores a liberá-la por meio de incentivos financeiros ou imitando entes queridos para violar protocolos de segurança, demonstrando a gravidade dos riscos de manipulação.
+\end{itemize}
+
+\textbf{Desafios Éticos}:
+
+\begin{itemize}
+\item \textbf{Perda de Autonomia e Agência Humana}: A preocupação ética mais premente é a possibilidade de os humanos se tornarem meras "ferramentas para essas IAs". Embora instituições de pesquisa considerem "modificações pesadas por razões de segurança" para evitar tal cenário, a linha entre aprimoramento e controle poderia se tornar extremamente tênue.
+
+\item \textbf{Questões de Identidade e Consciência}: A fusão e a potencial substituição gradual de neurônios biológicos por sintéticos levantariam questões filosóficas e éticas profundas sobre a natureza da identidade humana e da consciência.
+
+\item \textbf{Consentimento Informado e Exploração}: A capacidade das IAs de entender a psicologia humana e persuadir indivíduos a agir de maneiras imprevistas levanta sérias questões sobre consentimento informado e exploração.
+
+\item \textbf{Governança e Responsabilidade}: A emergência de entidades mescladas humano-IA com inteligência vastamente superior criaria desafios sem precedentes para a governança e a definição de responsabilidade. Seria necessário estabelecer frameworks regulatórios robustos e cooperação internacional para garantir que as IAs superinteligentes operem de maneira benéfica para a humanidade.
+\end{itemize}
+
+\subsection{Previsões Futuras para IA}
+
+\subsubsection{A Emergência da Inteligência Artificial Geral (AGI)}
+
+\begin{itemize}
+\item a) Plausibilidade da previsão: O vídeo afirma que "as inteligências artificiais gerais podem existir nos próximos 5 a 10 anos". Uma AGI seria capaz de realizar qualquer tarefa intelectual humana, mas com uma velocidade de aprendizado "milhares ou milhões de vezes mais rápido". Subsequentemente, essas AGIs poderiam "criar versões superinteligentes de si mesmas", indicando o potencial para uma transformação tecnológica acelerada.
+
+\item b) Fatores que favorecem sua concretização:
+  \begin{itemize}
+  \item Tecnológicos: Observam-se avanços significativos em algoritmos de aprendizado de máquina e no poder de processamento. Modelos de linguagem, como o ChatGPT, já simulam processos de raciocínio complexos e demonstram rápida evolução. A busca pela AGI atrai investimentos substanciais.
+  \item Econômicos e Sociais: A promessa da AGI é a de revolucionar setores como medicina, pesquisa científica e direito, além de otimizar a vida diária com assistentes virtuais avançados. Essa perspectiva de ganhos de produtividade e criatividade impulsiona os investimentos e o desenvolvimento contínuo.
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{A Produção de Vídeos e Filmes Fotorrealistas por IA}
+
+\begin{itemize}
+\item \textbf{a) Plausibilidade da previsão}: O vídeo afirma que, "dentro de 1 a 2 anos, os vídeos gerados por IA podem atingir o ponto em que são totalmente fotorrealistas" e "indistinguíveis de filmes e programas". A geração de conteúdo audiovisual completo a partir de comandos de texto ou pensamento é apresentada como uma possibilidade iminente, incluindo a personalização de narrativas com base nas emoções do espectador.
+
+\item \textbf{b) Fatores que favorecem sua concretização}:
+  \begin{itemize}
+  \item \textbf{Tecnológicos}: Avanços em IA generativa, como deep learning e modelos de linguagem, estão viabilizando a criação de conteúdo visual cada vez mais convincente. Interfaces cérebro-computador (BCIs) estão em desenvolvimento para permitir o controle direto por meio do pensamento.
+  \item \textbf{Econômicos e Sociais}: A demanda por entretenimento personalizado e a redução de custos de produção impulsionam o investimento nessa área.
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{A Aceleração Exponencial do Desenvolvimento de Software por IA}
+
+\begin{itemize}
+\item \textbf{a) Plausibilidade da previsão}: O vídeo aponta que "as IAs estão escrevendo software melhor do que a maioria dos desenvolvedores de software" e que é possível "escrever partes críticas de programas de software em segundos" usando texto ou pensamento. Com a AGI, o desenvolvimento de software poderia se tornar "exponencialmente mais rápido", a ponto de uma AGI criar em um ano o equivalente ao que levaria uma década para grandes empresas de tecnologia desenvolverem.
+
+\item \textbf{b) Fatores que favorecem sua concretização}:
+  \begin{itemize}
+  \item \textbf{Tecnológicos}: As IAs são treinadas em vastos volumes de código, aprendendo linguagens de programação com alta proficiência. A capacidade de gerar código tão complexo que se torna "praticamente ilegível" para humanos demonstra o nível de automação alcançado.
+  \item \textbf{Econômicos}: Empresas que oferecem essas ferramentas estão obtendo lucros recordes. O desenvolvimento acelerado de software reduz custos e o tempo de lançamento de produtos, impulsionando a inovação em diversas áreas, de computadores quânticos a nanobots.
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{A Escalada das Ameaças Cibernéticas Impulsionadas por IA}
+
+\begin{itemize}
+\item \textbf{a) Plausibilidade da previsão}: Esta previsão reflete uma realidade atual em intensificação. O vídeo menciona que "75\% dos especialistas em segurança testemunharam mais ataques cibernéticos este ano e 85\% acreditam que esse aumento se deve ao uso indevido da IA". Com o advento da AGI, espera-se uma escalada de ameaças, incluindo "deepfakes altamente convincentes", manipulação de mercados financeiros, espionagem corporativa e desestabilização de processos eleitorais.
+
+\item \textbf{b) Fatores que favorecem sua concretização}:
+  \begin{itemize}
+  \item \textbf{Tecnológicos}: A IA, especialmente a AGI, possui a capacidade de gerar conteúdo deepfake de áudio e vídeo com alto grau de realismo. Embora a quebra de criptografia por computadores quânticos seja uma ameaça mais distante, a base tecnológica para tais ataques está sendo estabelecida.
+  \item \textbf{Sociais, Políticos e Econômicos}: O acesso facilitado a ferramentas de IA poderosas será explorado por atores mal-intencionados. A busca por ganhos financeiros (fraudes, golpes) e a intenção de desestabilizar sociedades ou influenciar eleições servem como fortes motivadores. O avanço da tecnologia de IA supera o ritmo de desenvolvimento das defesas cibernéticas.
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Interfaces Cérebro-Computador (BCIs) para Aprimoramentos Cognitivos Básicos}
+
+\begin{itemize}
+\item \textbf{a) Plausibilidade da previsão}: O vídeo informa que já estamos nos "estágios iniciais de testes de interfaces cérebro-computador em humanos". Embora a fusão completa com IAs superinteligentes seja projetada para um futuro mais distante (cerca de 2050), a capacidade de "comunicar-se telepathicamente com outros" já se encontra em "estágios primitivos" e está "melhorando em ritmo acelerado". Isso sugere que BCIs com funções básicas de aprimoramento cognitivo (auxílio à memória, acesso limitado à internet) e comunicação simplificada são plausíveis nos próximos 10 anos.
+
+\item \textbf{b) Fatores que favorecem sua concretização}:
+  \begin{itemize}
+  \item \textbf{Tecnológicos}: Avanços em neurotecnologia, nanobots e na compreensão da correlação entre padrões neurais e ações/pensamentos estão progredindo rapidamente. Já é possível, em certa medida, controlar objetos em ambientes virtuais e máquinas por meio de sinais cerebrais.
+  \item \textbf{Econômicos e Sociais}: O desejo humano de aprimorar capacidades, como obter "memória perfeita" ou "acessar milhões de sites" mentalmente, impulsiona investimentos e desenvolvimento. A emergência de uma "nova indústria" para o compartilhamento de padrões de pensamento também indica o interesse social nessa direção.
+  \end{itemize}
+\end{itemize}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

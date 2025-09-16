@@ -1,0 +1,221 @@
+/* CSS for HTML output - Academic Style */
+
+body {
+    font-family: 'Times New Roman', serif;
+    font-size: 12pt;
+    line-height: 1.6;
+    max-width: 21cm;
+    margin: 0 auto;
+    padding: 2cm;
+    background-color: #ffffff;
+    color: #333333;
+}
+
+/* Headers */
+h1 {
+    font-size: 18pt;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1.5em;
+    margin-top: 2em;
+    color: #000000;
+}
+
+h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    border-bottom: 2px solid #333333;
+    padding-bottom: 5px;
+    color: #000000;
+}
+
+h3 {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-top: 1.5em;
+    margin-bottom: 1em;
+    color: #000000;
+}
+
+h4, h5, h6 {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: #000000;
+}
+
+/* Paragraphs */
+p {
+    margin-bottom: 1em;
+    text-align: justify;
+    text-indent: 0;
+}
+
+/* Lists */
+ul, ol {
+    margin: 1em 0;
+    padding-left: 2em;
+}
+
+li {
+    margin-bottom: 0.5em;
+}
+
+/* Nested lists */
+ul ul, ol ol, ul ol, ol ul {
+    margin: 0.5em 0;
+}
+
+/* Strong and emphasis */
+strong, b {
+    font-weight: bold;
+}
+
+em, i {
+    font-style: italic;
+}
+
+/* Links */
+a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Code */
+code {
+    font-family: 'Courier New', monospace;
+    font-size: 11pt;
+    background-color: #f5f5f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+    border: 1px solid #dddddd;
+}
+
+pre {
+    font-family: 'Courier New', monospace;
+    font-size: 10pt;
+    background-color: #f8f8f8;
+    padding: 1em;
+    border: 1px solid #dddddd;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+
+pre code {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    font-size: 11pt;
+}
+
+th, td {
+    border: 1px solid #dddddd;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+/* Blockquotes */
+blockquote {
+    margin: 1em 2em;
+    padding: 0.5em 1em;
+    border-left: 4px solid #cccccc;
+    background-color: #f9f9f9;
+    font-style: italic;
+}
+
+/* Academic references style */
+.referencias {
+    font-size: 10pt;
+    line-height: 1.4;
+}
+
+/* Title and author info */
+.title {
+    font-size: 18pt;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 0.5em;
+}
+
+.author {
+    font-size: 12pt;
+    text-align: center;
+    margin-bottom: 0.5em;
+}
+
+.date {
+    font-size: 12pt;
+    text-align: center;
+    margin-bottom: 2em;
+}
+
+/* Page breaks for printing */
+@media print {
+    body {
+        margin: 0;
+        padding: 1cm;
+    }
+    
+    h1, h2 {
+        page-break-after: avoid;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        page-break-inside: avoid;
+    }
+    
+    pre, blockquote {
+        page-break-inside: avoid;
+    }
+    
+    table {
+        page-break-inside: avoid;
+    }
+    
+    /* Ensure proper page margins for academic papers */
+    @page {
+        margin: 2cm;
+    }
+}
+
+/* Syntax highlighting for code blocks */
+.sourceCode {
+    background-color: #f8f8f8;
+    border: 1px solid #dddddd;
+    border-radius: 5px;
+    padding: 1em;
+    overflow-x: auto;
+}
+
+.sourceCode .kw { color: #0000ff; } /* Keywords */
+.sourceCode .dt { color: #008000; } /* Data types */
+.sourceCode .dv { color: #ff6600; } /* Decimal values */
+.sourceCode .bn { color: #ff6600; } /* Base-n integers */
+.sourceCode .fl { color: #ff6600; } /* Floats */
+.sourceCode .ch { color: #ff00ff; } /* Characters */
+.sourceCode .st { color: #ff0000; } /* Strings */
+.sourceCode .co { color: #008000; font-style: italic; } /* Comments */
+.sourceCode .ot { color: #0066cc; } /* Other tokens */
+.sourceCode .al { color: #ff0000; font-weight: bold; } /* Alerts */
+.sourceCode .fu { color: #000080; } /* Functions */
+.sourceCode .er { color: #ff0000; font-weight: bold; } /* Errors */
