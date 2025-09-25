@@ -12,10 +12,6 @@
 *.fdb_latexmk
 *.fls
 
-# Build artifacts
-/atividade_1/*.pdf
-/atividade_2/*.pdf
-
 # IDEs and editors
 .vscode/
 *.swp
