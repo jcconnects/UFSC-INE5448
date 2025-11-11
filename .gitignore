@@ -11,6 +11,7 @@
 *.synctex.gz
 *.fdb_latexmk
 *.fls
+build/
 
 # IDEs and editors
 .vscode/

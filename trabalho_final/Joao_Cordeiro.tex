@@ -1,0 +1,758 @@
+% ===============================
+% Template de Relatório de PoC (INE5448)
+% IA & Segurança — LabREC/UFSC
+% Versão 2.1 - ESTRUTURA VAZIA
+% ===============================
+\documentclass[12pt,a4paper]{article}
+
+% ---- Codificação, idioma e fontes ----
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}
+\DeclareUnicodeCharacter{2190}{\ensuremath{\leftarrow}}
+\DeclareUnicodeCharacter{2194}{\ensuremath{\leftrightarrow}}
+\DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
+\DeclareUnicodeCharacter{2265}{\ensuremath{\geq}}
+\DeclareUnicodeCharacter{2264}{\ensuremath{\leq}}
+\DeclareUnicodeCharacter{00B1}{\ensuremath{\pm}}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{times}
+
+% ---- Matemática, figuras e links ----
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{csquotes}
+\usepackage{listings}
+\usepackage{subcaption}
+\usepackage{multirow}
+
+% ---- Configuração de hyperlinks ----
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=blue,
+    pdftitle={Relatório de PoC - INE5448},
+    pdfpagemode=FullScreen,
+}
+
+% ---- Configuração de listagens de código ----
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    tabsize=2,
+    commentstyle=\color{gray},
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    literate=
+        {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+        {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+        {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+        {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+        {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+        {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+        {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+        {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+        {ã}{{\~a}}1 {õ}{{\~o}}1 {Ã}{{\~A}}1 {Õ}{{\~O}}1
+        {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+        {ñ}{{\~n}}1 {Ñ}{{\~N}}1
+}
+
+\lstdefinelanguage{yaml}{
+  keywords={true,false,null,y,n},
+  keywordstyle=\color{blue}\bfseries,
+  basicstyle=\ttfamily\small,
+  sensitive=false,
+  comment=[l]{\#},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{gray}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  moredelim=[l][\color{orange}]{\&},
+  moredelim=[l][\color{magenta}]{*},
+  moredelim=**[il][\color{green}]{:},
+  morestring=[b]',
+  morestring=[b]",
+  literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+    {ã}{{\~a}}1 {õ}{{\~o}}1 {ç}{{\c{c}}}1 {Ç}{{\c{C}}}1
+}
+
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+
+% ---- Bibliografia numérica (biber) ----
+\usepackage[backend=biber,style=numeric,sorting=nyt,maxbibnames=99]{biblatex}
+\addbibresource{Joao_Cordeiro.bib}
+
+% ---- Informações do documento ----
+% INSTRUÇÕES: Substitua os campos abaixo com suas informações
+\title{\textbf{SAST para detecção de vulnerabilidades em workflows do n8n}}
+\author{João Pedro Schmidt Cordeiro \and Gustavo Zambonin}
+
+\date{\small \today}
+
+% ==== Início do Documento ====
+\begin{document}
+
+\maketitle
+
+% ---- Resumo (Abstract) ----
+\begin{abstract}
+A crescente adoção de plataformas Low-Code/No-Code (LCNC), como o n8n, tem transformado o desenvolvimento de automações empresariais, democratizando a criação de workflows através de interfaces visuais. Entretanto, essa mudança de paradigma introduz uma lacuna crítica de governança: enquanto a plataforma subjacente é protegida por práticas robustas de segurança, os workflows criados pelos usuários, armazenados como arquivos JSON declarativos, não são submetidos ao mesmo rigor de análise de segurança. Este trabalho propõe o desenvolvimento de uma ferramenta de Análise Estática de Segurança de Aplicações (SAST) específica para workflows da n8n, capaz de detectar automaticamente vulnerabilidades como SQL Injection, Command Injection, SSRF, exposição de credenciais, manuseio inseguro de dados e negação de serviço. A metodologia adotada baseia-se em uma estratégia híbrida que combina duas ferramentas do estado da arte: o Agentic Radar, focado em riscos específicos de agentes de IA, e o Semgrep, configurado com regras customizadas para vulnerabilidades tradicionais de aplicações web. Além disso, propõem-se abordagens inovadoras para a criação de regras para o Semgrep, utilizando inteligência artificial e workflows com problemas conhecidos como base para o desenvolvimento e validação de padrões de detecção. A análise detalhada revelou que o Agentic Radar oferece cobertura efetiva de 16,7\% das classes de vulnerabilidades identificadas, enquanto o Semgrep apresenta potencial de cobertura de 66,7\% quando adequadamente configurado. Os resultados demonstram a viabilidade técnica da abordagem proposta, validando que a análise estática de estruturas declarativas JSON não apenas é possível, mas também eficaz para identificação de padrões inseguros. A solução contribui para elevar o nível de segurança das automações desenvolvidas em organizações brasileiras, auxiliando na conformidade com regulamentações como a LGPD e reduzindo riscos de vazamento de dados e ataques cibernéticos em ambientes de desenvolvimento democratizado.
+\end{abstract}
+
+\textbf{Palavras-chave:} SAST, n8n, Low-Code/No-Code, Segurança de Aplicações, Análise Estática, Vulnerabilidades, Automação de Workflows, Inteligência Artificial, LGPD.
+
+\tableofcontents
+
+% ==== Seção 1: Introdução ====
+\section{Introdução}
+\label{sec:introducao}
+
+\textit{[Apresentar o contexto do problema, a motivação para o trabalho, o problema específico abordado, delimitação clara do escopo (o que está incluído e excluído), e as contribuições esperadas da PoC.]}
+
+\subsection{Motivação e Contexto}
+
+\textit{[Explicar o cenário atual, as limitações dos métodos existentes, e por que o problema é relevante. Incluir dados estatísticos quando disponíveis.]}
+
+\subsection{Problema Abordado}
+
+\textit{[Definir especificamente qual problema técnico será resolvido pela PoC, listando os tipos de situações ou casos de uso que serão tratados.]}
+
+\subsection{Delimitação do Escopo}
+
+\textit{[Listar explicitamente o que NÃO será abordado no trabalho para evitar expectativas incorretas.]}
+
+\subsection{Contribuições Esperadas}
+
+\textit{[Enumerar as principais contribuições técnicas, metodológicas ou científicas que a PoC pretende demonstrar.]}
+
+% ==== Seção 2: Fundamentação Teórica ====
+\section{Fundamentação Teórica e Estado da Arte}
+\label{sec:fundamentacao}
+
+\textit{[Revisar a literatura relevante, técnicas existentes, trabalhos relacionados, e identificar lacunas que justifiquem o desenvolvimento da PoC.]}
+
+\subsection{Técnicas de [Área Específica]}
+
+\textit{[Descrever as principais técnicas e abordagens já existentes na área do problema, tanto clássicas quanto modernas.]}
+
+\subsubsection{Abordagens Clássicas}
+
+\textit{[Apresentar métodos tradicionais, suas características, vantagens e limitações.]}
+
+\subsubsection{Abordagens Baseadas em ML/DL}
+
+\textit{[Descrever técnicas modernas de aprendizado de máquina ou profundo aplicadas ao problema, incluindo arquiteturas de redes neurais relevantes.]}~
+
+\subsection{Explicabilidade em Modelos de IA}
+
+\textit{[Discutir técnicas de XAI (Explainable AI) relevantes para o projeto, como Grad-CAM, SHAP, LIME, e sua importância no contexto da aplicação.]}
+
+\subsection{Segurança e Privacidade em Sistemas de IA}
+
+\textit{[Abordar vulnerabilidades comuns em sistemas de IA, ataques adversariais, e requisitos de conformidade legal (LGPD, GDPR, etc.).]}
+
+\subsubsection{Ataques Adversariais}
+
+\textit{[Explicar tipos de ataques (white-box, black-box), técnicas de ataque (FGSM, PGD) e possíveis defesas.]}
+
+\subsubsection{Conformidade com LGPD}
+
+\textit{[Detalhar os artigos relevantes da LGPD e como eles se aplicam ao projeto específico.]}
+
+\subsection{Gaps e Oportunidades}
+
+\textit{[Identificar lacunas na literatura e oportunidades de pesquisa que justifiquem o desenvolvimento da PoC.]}
+
+% ==== Seção 3: Objetivos e Métricas ====
+\section{Objetivos e Métricas de Sucesso}
+\label{sec:objetivos}
+
+\textit{[Definir claramente os objetivos gerais e específicos do projeto, estabelecendo métricas quantitativas e qualitativas para avaliar o sucesso da PoC.]}
+
+\subsection{Objetivo Geral}
+
+\textit{[Declarar o objetivo principal da PoC de forma clara e mensurável, incluindo metas de performance esperadas.]}
+
+\subsection{Objetivos Específicos}
+
+\textit{[Listar objetivos técnicos detalhados, numerados e verificáveis, cobrindo aspectos de implementação, segurança, privacidade e conformidade.]}
+
+\begin{enumerate}[label=\textbf{OE\arabic*:}, left=1.5em]
+    \item \textit{[Objetivo específico 1]}
+    \item \textit{[Objetivo específico 2]}
+    \item \textit{[Objetivo específico 3]}
+    % Adicione mais conforme necessário
+\end{enumerate}
+
+\subsection{Métricas de Avaliação}
+
+\textit{[Estabelecer critérios objetivos para avaliar o sucesso do projeto.]}
+
+\subsubsection{Métricas Quantitativas}
+
+\textit{[Definir métricas numéricas (acurácia, F1-score, latência, throughput, etc.) com valores-alvo e justificativas para as metas estabelecidas.]}
+
+\begin{table}[htb]
+\centering \small
+\caption{Métricas quantitativas e valores-alvo}
+\label{tab:metricas-quantitativas}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Métrica} & \textbf{Definição} & \textbf{Meta} \\ \midrule
+% Adicione suas métricas aqui
+% Exemplo: F1-Score & Média harmônica de Precisão e Recall & $\geq 0.90$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Métricas Qualitativas}
+
+\textit{[Estabelecer critérios subjetivos de avaliação (usabilidade, clareza de explicações, facilidade de integração) e métodos de avaliação.]}
+
+\subsubsection{Métricas de Robustez e Segurança}
+
+\textit{[Definir testes específicos de robustez (transformações, compressões, ataques adversariais) com critérios de aceitação.]}
+
+\begin{table}[htb]
+\centering \small
+\caption{Testes de robustez obrigatórios}
+\label{tab:robustez}
+\begin{tabular}{@{}lp{9cm}@{}}
+\toprule
+\textbf{Cenário} & \textbf{Objetivo} \\ \midrule
+% Adicione seus testes aqui
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Benchmarks Comparativos}
+
+\textit{[Identificar sistemas ou trabalhos que servirão como baseline para comparação de performance.]}
+
+% ==== Seção 4: Escopo da Solução ====
+\section{Escopo da Solução e Requisitos}
+\label{sec:escopo}
+
+\textit{[Detalhar os casos de uso, arquitetura do sistema, requisitos técnicos e composição dos dados.]}
+
+\subsection{Casos de Uso}
+
+\textit{[Descrever os principais fluxos de interação com o sistema.]}
+
+\subsubsection{Caso de Uso Principal}
+
+\textit{[Detalhar o cenário principal de uso incluindo atores, pré-condições, fluxo principal e fluxos alternativos.]}
+
+\textbf{Ator primário:} \textit{[Nome do ator]} \\
+\textbf{Pré-condições:}
+\begin{itemize}
+    \item \textit{[Pré-condição 1]}
+    \item \textit{[Pré-condição 2]}
+\end{itemize}
+
+\textbf{Fluxo principal:}
+\begin{enumerate}
+    \item \textit{[Passo 1]}
+    \item \textit{[Passo 2]}
+    \item \textit{[Passo 3]}
+\end{enumerate}
+
+\textbf{Fluxos alternativos:}
+\begin{itemize}
+    \item \textit{[Alternativa 1]}
+    \item \textit{[Alternativa 2]}
+\end{itemize}
+
+\subsubsection{Casos Excluídos do Escopo}
+
+\textit{[Listar explicitamente casos de uso que NÃO serão implementados na PoC.]}
+
+\subsection{Arquitetura Proposta}
+
+\textit{[Apresentar a arquitetura lógica do sistema, preferencialmente com diagramas, explicando as camadas, componentes e fluxo de dados. Incluir considerações de segurança (defense in depth, privacy by design).]}
+
+% Exemplo de inclusão de figura (descomente quando tiver a imagem):
+% \begin{figure}[htb]
+% \centering
+% \includegraphics[width=0.9\textwidth]{figures/arquitetura.png}
+% \caption{Arquitetura lógica do sistema}
+% \label{fig:arquitetura}
+% \end{figure}
+
+\subsubsection{Componentes Principais}
+
+\textit{[Descrever em detalhes cada componente da arquitetura (frontend, backend, modelo de ML, sistema de logs, etc.) e suas responsabilidades.]}
+
+\subsection{Requisitos Técnicos}
+
+\textit{[Especificar as tecnologias, frameworks e infraestrutura necessários.]}
+
+\subsubsection{Tecnologias e Frameworks}
+
+\textit{[Listar em formato de tabela as tecnologias escolhidas para cada camada/componente com justificativas técnicas.]}
+
+\begin{table}[htb]
+\centering \small
+\caption{Stack tecnológico}
+\label{tab:stack}
+\begin{tabular}{@{}llp{8cm}@{}}
+\toprule
+\textbf{Camada} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \midrule
+% Adicione suas tecnologias aqui
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Infraestrutura Mínima}
+
+\textit{[Especificar requisitos de hardware (CPU, GPU, RAM, disco) e rede para desenvolvimento, treinamento e deploy.]}
+
+\subsubsection{Dados de Treinamento e Validação}
+
+\textit{[Descrever a composição do dataset (quantidade, proporções, fontes), estratégia de divisão (treino/validação/teste) e considerações de privacidade.]}
+
+\begin{table}[htb]
+\centering \small
+\caption{Composição do dataset}
+\label{tab:dataset}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Conjunto} & \textbf{Classe A} & \textbf{Classe B} & \textbf{Total} \\ \midrule
+Treinamento (70\%) & & & \\
+Validação (15\%) & & & \\
+Teste (15\%) & & & \\ \midrule
+\textbf{Total} & & & \\ \bottomrule
+\end{tabular}
+\end{table}
+
+% ==== Seção 5: Threat Model ====
+\section{Ameaças, Riscos e Controles}
+\label{sec:threat-model}
+
+\textit{[Aplicar metodologia STRIDE para identificação sistemática de ameaças, analisar riscos específicos de sistemas de ML, e estabelecer controles de mitigação.]}
+
+\subsection{Superfícies de Ataque}
+
+\textit{[Enumerar todos os pontos do sistema que podem ser explorados por atacantes.]}
+
+\subsection{Análise STRIDE}
+
+\textit{[Apresentar matriz completa de ameaças usando categorias STRIDE (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege) com controles correspondentes.]}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Matriz de ameaças STRIDE}
+\label{tab:stride}
+\begin{tabular}{@{}p{2cm}p{4.5cm}p{5cm}@{}}
+\toprule
+\textbf{Categoria} & \textbf{Ameaça} & \textbf{Controle} \\ \midrule
+\textbf{Spoofing} & & \\
+\textbf{Tampering} & & \\
+\textbf{Repudiation} & & \\
+\textbf{Information Disclosure} & & \\
+\textbf{Denial of Service} & & \\
+\textbf{Elevation of Privilege} & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ataques Específicos a Modelos de ML}
+
+\textit{[Detalhar ameaças particulares a sistemas de aprendizado de máquina.]}
+
+\subsubsection{Evasion Attacks}
+
+\textit{[Descrever ataques adversariais que tentam enganar o modelo em tempo de inferência e controles de mitigação.]}
+
+\subsubsection{Data Poisoning}
+
+\textit{[Explicar riscos de contaminação do conjunto de treinamento e medidas preventivas.]}
+
+\subsubsection{Model Extraction}
+
+\textit{[Abordar riscos de roubo de modelo proprietário através de queries e contramedidas.]}
+
+\subsection{Considerações de Privacidade (LINDDUN)}
+
+\textit{[Aplicar metodologia LINDDUN para análise sistemática de riscos de privacidade (Linkability, Identifiability, Non-repudiation, Detectability, Disclosure, Unawareness, Non-compliance).]}
+
+\subsection{Considerações Éticas}
+
+\textit{[Discutir aspectos éticos do sistema.]}
+
+\subsubsection{Vieses Algorítmicos}
+
+\textit{[Identificar riscos de discriminação, estratégias de mitigação e métodos de avaliação de equidade.]}
+
+\subsubsection{Transparência e Explicabilidade}
+
+\textit{[Estabelecer compromissos de transparência e como a explicabilidade será implementada.]}
+
+\subsubsection{Direito de Contestação}
+
+\textit{[Definir processo para usuários contestarem decisões automatizadas.]}
+
+% ==== Seção 6: Metodologia ====
+\section{Metodologia de Desenvolvimento da PoC}
+\label{sec:metodologia}
+
+\textit{[Detalhar todos os aspectos práticos de implementação: preparação de dados, modelagem, treinamento, implementação e integração.]}
+
+\subsection{Dados e Preparação}
+
+\textit{[Descrever origem, geração e preparação dos dados.]}
+
+\subsubsection{Geração de Dataset Sintético (ou Coleta de Dados Reais)}
+
+\textit{[Explicar como os dados foram obtidos ou gerados, incluindo scripts, ferramentas e técnicas utilizadas.]}
+
+\subsubsection{Particionamento e Estratificação}
+
+\textit{[Detalhar como o dataset foi dividido, garantindo representatividade em todos os subconjuntos.]}
+
+\subsection{Modelagem e Treinamento}
+
+\textit{[Explicar escolhas de arquitetura e processo de treinamento.]}
+
+\subsubsection{Arquiteturas Avaliadas}
+
+\textit{[Listar modelos candidatos com características técnicas (número de parâmetros, FLOPS, pré-treinamento).]}
+
+\begin{table}[H]
+\centering
+\caption{Modelos candidatos}
+\label{tab:modelos}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Modelo} & \textbf{Parâmetros} & \textbf{FLOPS} & \textbf{Pré-treinamento} \\ \midrule
+% Adicione seus modelos aqui
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Estratégia de Treinamento}
+
+\textit{[Detalhar hiperparâmetros, fases de treinamento (transfer learning, fine-tuning), técnicas de data augmentation, regularização, função de perda e otimizadores utilizados. Incluir snippets de código relevantes.]}
+
+\subsubsection{Adversarial Training}
+
+\textit{[Explicar como exemplos adversariais foram incorporados ao treinamento para aumentar robustez, incluindo código de implementação.]}
+
+\subsection{Implementação e Integração}
+
+\textit{[Descrever aspectos práticos de implementação do sistema completo.]}
+
+\subsubsection{Pipeline de Inferência}
+
+\textit{[Apresentar código do pipeline completo de processamento, desde entrada até geração de resultados e logs.]}
+
+\subsubsection{API REST}
+
+\textit{[Documentar endpoints, formatos de request/response, autenticação e exemplos de uso via curl ou outra ferramenta.]}
+
+\subsubsection{Containerização}
+
+\textit{[Apresentar configuração Docker/Docker Compose para reprodutibilidade e deploy.]}
+
+% ==== Seção 7: Avaliação ====
+\section{Avaliação Experimental}
+\label{sec:avaliacao}
+
+\textit{[Apresentar protocolo experimental, resultados obtidos, comparações e análises.]}
+
+\subsection{Protocolo Experimental}
+
+\textit{[Detalhar configuração de hardware/software e metodologia de avaliação.]}
+
+\subsubsection{Configuração de Hardware e Software}
+
+\textit{[Especificar ambiente de execução (GPU, RAM, OS, versões de bibliotecas).]}
+
+\subsubsection{Repetição e Validação Cruzada}
+
+\textit{[Explicar como a variância foi tratada (múltiplas execuções, seeds diferentes, intervalos de confiança).]}
+
+\subsection{Resultados}
+
+\textit{[Apresentar resultados quantitativos e qualitativos.]}
+
+\subsubsection{Performance no Conjunto de Teste}
+
+\textit{[Tabela com métricas principais (F1, Precisão, Recall, AUC-ROC) por modelo, comparando com metas estabelecidas.]}
+
+\begin{table}[H]
+\centering
+\caption{Métricas principais por modelo}
+\label{tab:resultados}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Modelo} & \textbf{F1-Score} & \textbf{Precisão} & \textbf{Recall} & \textbf{AUC-ROC} \\ \midrule
+% Adicione seus resultados aqui
+\midrule
+\textit{Meta Alvo} & & & & \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Matriz de Confusão}
+
+\textit{[Apresentar matriz de confusão com análise de falsos positivos e falsos negativos, identificando padrões nos erros.]}
+
+\subsubsection{Performance por Tipo/Categoria}
+
+\textit{[Detalhar desempenho em subcategorias do problema para identificar pontos fortes e fracos.]}
+
+\subsubsection{Latência e Throughput}
+
+\textit{[Reportar métricas de tempo de processamento e vazão, com breakdown por etapa do pipeline.]}
+
+\subsection{Testes de Robustez}
+
+\textit{[Avaliar resiliência do sistema.]}
+
+\subsubsection{Transformações Geométricas e Degradações}
+
+\textit{[Tabela mostrando degradação de performance sob transformações comuns (compressão, ruído, rotação).]}
+
+\subsubsection{Ataques Adversariais}
+
+\textit{[Resultados de testes contra ataques adversariais (FGSM, PGD) com diferentes intensidades.]}
+
+\subsection{Análise de Vieses}
+
+\textit{[Avaliar equidade do sistema.]}
+
+\subsubsection{Equidade entre Subgrupos}
+
+\textit{[Tabela comparando performance entre diferentes subgrupos para identificar possíveis discriminações.]}
+
+\subsection{Explicabilidade: Análise Qualitativa}
+
+\textit{[Avaliar qualidade das explicações geradas (Grad-CAM ou outra técnica) através de avaliação por especialistas ou métricas objetivas. Incluir exemplos visuais.]}
+
+% ==== Seção 8: Discussão ====
+\section{Discussão}
+\label{sec:discussao}
+
+\textit{[Interpretar resultados, discutir limitações, comparar com estado-da-arte e analisar implicações práticas.]}
+
+\subsection{Alcance dos Objetivos}
+
+\textit{[Avaliar se os objetivos estabelecidos foram atingidos, comparando resultados com metas.]}
+
+\subsection{Limitações Identificadas}
+
+\textit{[Discutir honestamente as limitações do trabalho.]}
+
+\subsubsection{Limitações Técnicas}
+
+\textit{[Identificar restrições técnicas (dependência de qualidade de entrada, escopo limitado, dataset sintético, etc.).]}
+
+\subsubsection{Limitações de Segurança}
+
+\textit{[Reconhecer vulnerabilidades residuais e aspectos de segurança que precisam ser melhorados para produção.]}
+
+\subsection{Comparação com Estado-da-Arte}
+
+\textit{[Tabela comparativa com trabalhos relacionados e sistemas comerciais, analisando posicionamento da PoC.]}
+
+\subsection{Trade-offs Segurança vs. Usabilidade}
+
+\textit{[Discutir compromissos feitos entre segurança, privacidade e usabilidade, justificando escolhas.]}
+
+\subsection{Implicações Práticas}
+
+\textit{[Analisar impactos práticos do trabalho.]}
+
+\subsubsection{Para Usuários/Stakeholders}
+
+\textit{[Discutir como o sistema pode ser utilizado na prática, benefícios e necessidades de treinamento.]}
+
+\subsubsection{Para Políticas Públicas}
+
+\textit{[Refletir sobre implicações para regulamentação, padronização e investimentos públicos.]}
+
+% ==== Seção 9: Conclusões ====
+\section{Conclusões e Próximos Passos}
+\label{sec:conclusoes}
+
+\textit{[Sintetizar contribuições, propor trabalhos futuros e fornecer recomendações.]}
+
+\subsection{Síntese das Evidências}
+
+\textit{[Resumir as principais conclusões demonstradas pela PoC de forma objetiva.]}
+
+\subsection{Contribuições}
+
+\textit{[Listar contribuições metodológicas, técnicas e científicas do trabalho.]}
+
+\subsection{Trabalhos Futuros}
+
+\textit{[Propor extensões e melhorias.]}
+
+\subsubsection{Curto Prazo (3-6 meses)}
+
+\textit{[Melhorias incrementais possíveis em 3-6 meses.]}
+
+\subsubsection{Médio Prazo (6-12 meses)}
+
+\textit{[Desenvolvimento de funcionalidades adicionais ou pilotos em 6-12 meses.]}
+
+\subsubsection{Longo Prazo (1-2 anos)}
+
+\textit{[Visão de evolução do sistema em 1-2 anos (escala, novas funcionalidades, federação).]}
+
+\subsection{Recomendações}
+
+\textit{[Fornecer orientações práticas para stakeholders interessados em adotar tecnologia similar.]}
+
+% ==== Seção 10: Checklist de Conformidade ====
+\section{Checklist de Conformidade (LGPD/Ética/Segurança)}
+\label{sec:checklist}
+
+\subsection{Lei Geral de Proteção de Dados (LGPD)}
+
+\begin{itemize}[label=$\square$]
+    \item \textbf{Minimização de dados (Art. 6º, III):}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+        \item \textit{[Item de verificação 2]}
+    \end{itemize}
+
+    \item \textbf{Finalidade específica (Art. 6º, I):}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Transparência (Art. 6º, VI):}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Segurança (Art. 46):}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Direito à explicação (Art. 20):}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Não discriminação (Art. 6º, IX):}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Segurança da Informação}
+
+\begin{itemize}[label=$\square$]
+    \item \textbf{Criptografia:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Autenticação e Autorização:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Isolamento:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Auditoria:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Resiliência:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Ética e IA Responsável}
+
+\begin{itemize}[label=$\square$]
+    \item \textbf{Explicabilidade:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Equidade:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Accountability:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Contestação:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+
+    \item \textbf{Transparência pública:}
+    \begin{itemize}[label=$\square$]
+        \item \textit{[Item de verificação 1]}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Ações Pendentes para Produção}
+
+\begin{itemize}[label=$\square$]
+    \item \textit{[Ação pendente 1]}
+    \item \textit{[Ação pendente 2]}
+\end{itemize}
+
+% ==== Agradecimentos ====
+\section*{Agradecimentos}
+
+\textit{[Agradecer aos orientadores, colegas, instituições e fontes de financiamento quando aplicável.]}
+
+% ==== Bibliografia ====
+% \printbibliography
+
+% ==== Apêndices ====
+\appendix
+
+\section{Detalhes de Implementação}
+\label{app:implementacao}
+
+\subsection{Estrutura de Diretórios}
+
+\textit{[Apresentar árvore completa de diretórios do projeto.]}
+
+\subsection{Comandos para Reprodução}
+
+\textit{[Lista step-by-step de comandos para setup, treinamento, avaliação e deploy do sistema.]}
+
+\section{Exemplos Adicionais de Resultados}
+\label{app:exemplos}
+
+\textit{[Figuras adicionais mostrando casos de sucesso e falha, exemplos visuais de classificações corretas e incorretas.]}
+
+\section{Código-fonte Completo}
+\label{app:codigo}
+
+\textit{[Link para repositório público com código-fonte e licença de uso.]}
+
+\end{document}
