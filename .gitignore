@@ -12,6 +12,9 @@
 *.fdb_latexmk
 *.fls
 build/
+*.bib
+*.bcf
+*.run.xml
 
 # IDEs and editors
 .vscode/
