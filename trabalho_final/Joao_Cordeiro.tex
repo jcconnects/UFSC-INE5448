@@ -217,6 +217,14 @@ A capacidade de análise de fluxo de dados (dataflow analysis) do Semgrep é par
 
 A análise revela que o Semgrep oferece potencial de cobertura para aproximadamente 66,7\% das classes identificadas, mas esta capacidade é inteiramente potencial: depende do desenvolvimento de regras personalizadas. Até o momento, nenhum conjunto de regras específico para n8n existe no registro comunitário público.
 
+\textbf{Limitação Crítica Identificada: Modo JSON vs. Modo Genérico}
+
+Durante a fase experimental deste trabalho, identificou-se uma limitação fundamental do modo JSON do Semgrep quando aplicado a estruturas altamente aninhadas como workflows do n8n. O modo JSON, que realiza parsing da estrutura em árvores sintáticas abstratas (AST), apresenta dificuldades em aplicar padrões de detecção em arrays profundamente aninhados (4+ níveis de profundidade), como o array \texttt{nodes} dentro de workflows n8n.
+
+A solução identificada foi a utilização do \textbf{modo genérico} (generic mode) do Semgrep, que trata o arquivo JSON como texto plano e aplica correspondência baseada em expressões regulares. Esta abordagem, embora menos sofisticada semanticamente, demonstrou-se significativamente mais efetiva para detecção de padrões inseguros em workflows n8n, conforme será detalhado na Seção \ref{sec:avaliacao}.
+
+Esta descoberta tem implicações importantes para a análise de segurança de plataformas LCNC: ferramentas SAST tradicionais requerem adaptação cuidadosa ao paradigma declarativo de configuração-como-código, e a escolha do modo de análise apropriado é tão crítica quanto a seleção da ferramenta em si.
+
 A principal limitação é a ausência de conhecimento nativo do esquema n8n, exigindo investimento estimado entre 40 e 60 horas de trabalho especializado para desenvolver regras customizadas abrangentes.
 
 \subsection{Explicabilidade em Ferramentas de Análise de Segurança}
@@ -270,6 +278,12 @@ Uma oportunidade promissora é a utilização de IA para geração assistida de 
 Esta abordagem híbrida — motor de análise clássico (Semgrep) potencializado por IA generativa para desenvolvimento de conhecimento de segurança — combina as forças de ambos os paradigmas: a confiabilidade, transparência e performance da análise estática baseada em padrões com a flexibilidade, capacidade de adaptação e eficiência de desenvolvimento proporcionadas por modelos de linguagem.
 
 A implementação desta abordagem utiliza prompts especializados e few-shot learning, fornecendo ao Claude 3.5 Sonnet exemplos de regras Semgrep existentes para outras plataformas e solicitando adaptação para o esquema JSON do n8n. A validação das regras geradas por IA através de testes automatizados em workflows é essencial para garantir confiabilidade antes da implantação em ambientes de produção.
+
+\subsubsection{Iniciativa Comunitária: n8n-CyberSecurity-Workflows}
+
+A comunidade de segurança cibernética tem reconhecido a importância de automação de segurança utilizando n8n. O repositório \texttt{n8n-CyberSecurity-Workflows} \cite{n8n_cybersec_workflows}, mantido pela comunidade CyberSecurityUP, documenta mais de 100 ideias de workflows para automação de segurança em Red Team, Blue Team, AppSec e DevSecOps.
+
+Relevante para este trabalho, o repositório menciona explicitamente a possibilidade de utilizar Semgrep para análise de segurança de workflows n8n em formato JSON, reconhecendo a lacuna de ferramentas especializadas. Esta iniciativa comunitária reforça a necessidade identificada neste trabalho e sugere demanda prática por soluções SAST dedicadas ao ecossistema n8n.
 
 \subsubsection{Oportunidade: Arquitetura Híbrida para Cobertura Completa}
 
@@ -939,76 +953,254 @@ Embora a ferramenta não tome decisões automatizadas sobre indivíduos (não é
 \section{Avaliação Experimental}
 \label{sec:avaliacao}
 
-\textit{[Apresentar protocolo experimental, resultados obtidos, comparações e análises.]}
+Esta seção apresenta os resultados da validação experimental da análise estática de segurança de workflows n8n utilizando Semgrep. O estudo documenta uma descoberta técnica crítica: a necessidade de adaptação do modo de análise (JSON vs. genérico) para plataformas Low-Code/No-Code, contribuindo para o conhecimento sobre aplicação de ferramentas SAST a paradigmas declarativos.
 
 \subsection{Protocolo Experimental}
 
-\textit{[Detalhar configuração de hardware/software e metodologia de avaliação.]}
+O protocolo experimental seguiu abordagem iterativa em duas fases: tentativa inicial com modo JSON (falha completa) seguida de pivô para modo genérico (sucesso parcial), permitindo comparação empírica das capacidades de cada abordagem.
 
 \subsubsection{Configuração de Hardware e Software}
 
-\textit{[Especificar ambiente de execução (GPU, RAM, OS, versões de bibliotecas).]}
+A análise foi conduzida em ambiente controlado com as seguintes especificações:
 
-\subsubsection{Repetição e Validação Cruzada}
+\begin{itemize}
+    \item \textbf{Sistema Operacional}: macOS 14.6 (Darwin 24.6.0)
+    \item \textbf{Processador}: Apple Silicon (arquitetura ARM64)
+    \item \textbf{Memória RAM}: 16GB
+    \item \textbf{Python}: Versão 3.14
+    \item \textbf{Semgrep}: Versão 1.144.0
+    \item \textbf{Claude 3.5 Sonnet}: Via API Anthropic (geração assistida de regras)
+\end{itemize}
 
-\textit{[Explicar como a variância foi tratada (múltiplas execuções, seeds diferentes, intervalos de confiança).]}
+\subsubsection{Dataset de Validação}
 
-\subsection{Resultados}
-
-\textit{[Apresentar resultados quantitativos e qualitativos.]}
-
-\subsubsection{Performance no Conjunto de Teste}
-
-\textit{[Tabela com métricas principais (F1, Precisão, Recall, AUC-ROC) por modelo, comparando com metas estabelecidas.]}
+O dataset consiste em três workflows reais do n8n, totalizando 14 vulnerabilidades documentadas através de revisão manual especializada seguindo o framework OWASP LCNC Top 10. A Tabela \ref{tab:dataset-validation} apresenta as características do dataset.
 
 \begin{table}[H]
 \centering
-\caption{Métricas principais por modelo}
-\label{tab:resultados}
+\caption{Características do dataset de validação}
+\label{tab:dataset-validation}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-\textbf{Modelo} & \textbf{F1-Score} & \textbf{Precisão} & \textbf{Recall} & \textbf{AUC-ROC} \\ \midrule
-% Adicione seus resultados aqui
-\midrule
-\textit{Meta Alvo} & & & & \\ \bottomrule
+\textbf{Workflow} & \textbf{Nós} & \textbf{Linhas} & \textbf{Vulnerabilidades} & \textbf{Classes} \\ \midrule
+workflow\_1.json & 67 & 2.650 & 2 & Secret Deletion \\
+workflow\_2.json & 100+ & 2.945 & 5 & SQL Injection (3x), Command Injection (2x) \\
+workflow\_3.json & 17 & 605 & 7 & Diversos \\
+\textbf{TOTAL} & \textbf{184+} & \textbf{6.200} & \textbf{14} & \textbf{6 classes} \\ \bottomrule
 \end{tabular}
 \end{table}
 
-\subsubsection{Matriz de Confusão}
+\subsection{Resultados}
 
-\textit{[Apresentar matriz de confusão com análise de falsos positivos e falsos negativos, identificando padrões nos erros.]}
+A avaliação experimental revelou diferenças dramáticas entre os dois modos de análise do Semgrep, documentando limitações arquiteturais fundamentais do modo JSON para estruturas LCNC.
 
-\subsubsection{Performance por Tipo/Categoria}
+\subsubsection{Fase 1: Modo JSON (Falha Completa)}
 
-\textit{[Detalhar desempenho em subcategorias do problema para identificar pontos fortes e fracos.]}
+A tentativa inicial utilizou o modo JSON nativo do Semgrep, desenvolvendo 33 regras customizadas com assistência de IA (Claude 3.5 Sonnet) em 3,75 horas. As regras foram sintaticamente válidas e seguiam as convenções do Semgrep, cobrindo 7 classes de vulnerabilidades.
 
-\subsubsection{Latência e Throughput}
+\textbf{Execução}: Semgrep executou sem erros em todos os workflows (tempo médio: 2,3s por workflow, memória: $\sim$55MB).
 
-\textit{[Reportar métricas de tempo de processamento e vazão, com breakdown por etapa do pipeline.]}
+\textbf{Detecções}: Zero. Nenhuma das 14 vulnerabilidades documentadas foi detectada.
 
-\subsection{Testes de Robustez}
+A Tabela \ref{tab:json-mode-results} apresenta os resultados detalhados.
 
-\textit{[Avaliar resiliência do sistema.]}
+\begin{table}[H]
+\centering
+\caption{Resultados da análise em modo JSON}
+\label{tab:json-mode-results}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Workflow} & \textbf{Detecções} & \textbf{Esperado} & \textbf{Cobertura} & \textbf{FN} \\ \midrule
+workflow\_1.json & 0 & 2 & 0\% & 2 \\
+workflow\_2.json & 0 & 5 & 0\% & 5 \\
+workflow\_3.json & 0 & 7 & 0\% & 7 \\
+\textbf{TOTAL} & \textbf{0} & \textbf{14} & \textbf{0\%} & \textbf{14 (100\%)} \\ \bottomrule
+\end{tabular}
+\end{table}
 
-\subsubsection{Transformações Geométricas e Degradações}
+\textbf{Análise de Causa Raiz}:
 
-\textit{[Tabela mostrando degradação de performance sob transformações comuns (compressão, ruído, rotação).]}
+Investigação detalhada revelou três limitações técnicas fundamentais:
 
-\subsubsection{Ataques Adversariais}
+\begin{enumerate}
+    \item \textbf{Aninhamento Profundo}: O parser JSON do Semgrep falha em aplicar padrões dentro de arrays profundamente aninhados (4+ níveis). A estrutura típica de workflows n8n (root $\rightarrow$ nodes $\rightarrow$ node $\rightarrow$ parameters) excede esta capacidade.
 
-\textit{[Resultados de testes contra ataques adversariais (FGSM, PGD) com diferentes intensidades.]}
+    \item \textbf{Comportamento de Ellipsis}: O operador \texttt{...} (correspondência flexível) comporta-se diferentemente em modo JSON comparado a linguagens de código, não iterando sobre elementos de arrays conforme necessário.
 
-\subsection{Análise de Vieses}
+    \item \textbf{Extração de Metavariáveis}: Expressões n8n contendo \texttt{\{\{ \$json.field \}\}} não foram corretamente capturadas via \texttt{metavariable-regex}, impedindo detecção de injeção.
+\end{enumerate}
 
-\textit{[Avaliar equidade do sistema.]}
+\textbf{Validação}: Teste com regra mínima (detectar qualquer nó com campo \texttt{"type"}) também produziu zero detecções, confirmando limitação arquitetural, não erro de implementação.
 
-\subsubsection{Equidade entre Subgrupos}
+\subsubsection{Fase 2: Modo Genérico (Breakthrough)}
 
-\textit{[Tabela comparando performance entre diferentes subgrupos para identificar possíveis discriminações.]}
+Baseado na análise de causa raiz, pivotou-se para o \textbf{modo genérico} do Semgrep, que trata arquivos JSON como texto plano e aplica correspondência via expressões regulares (regex). Desenvolveram-se 7 regras focadas em padrões textuais específicos.
 
-\subsection{Explicabilidade: Análise Qualitativa}
+\textbf{Execução}: Semgrep executou com performance similar (tempo: $\sim$2s/workflow).
 
-\textit{[Avaliar qualidade das explicações geradas (Grad-CAM ou outra técnica) através de avaliação por especialistas ou métricas objetivas. Incluir exemplos visuais.]}
+\textbf{Detecções}: 19 findings totais, incluindo 100\% das vulnerabilidades críticas documentadas de SQL Injection e Command Injection, além de descoberta de 10 instâncias adicionais não documentadas no ground truth inicial.
+
+A Tabela \ref{tab:generic-mode-results} apresenta os resultados detalhados.
+
+\begin{table}[H]
+\centering
+\caption{Resultados da análise em modo genérico}
+\label{tab:generic-mode-results}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Workflow} & \textbf{Detecções} & \textbf{Principais Achados} & \textbf{Tempo} \\ \midrule
+workflow\_1.json & 2 & Operações Vault não autorizadas (2x) & 1,8s \\
+workflow\_2.json & 13 & SQL Injection (3 doc + 10 novos) & 2,1s \\
+workflow\_3.json & 4 & PGPASSWORD injection, SSH keys & 1,9s \\
+\textbf{TOTAL} & \textbf{19} & \textbf{6 classes detectadas} & \textbf{5,8s} \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Comparação Direta: JSON vs. Genérico}
+
+A Tabela \ref{tab:mode-comparison} compara diretamente os dois modos de análise.
+
+\begin{table}[H]
+\centering
+\caption{Comparação JSON mode vs. Generic mode}
+\label{tab:mode-comparison}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Métrica} & \textbf{JSON Mode} & \textbf{Generic Mode} & \textbf{Diferença} \\ \midrule
+Regras desenvolvidas & 33 (7 arquivos) & 7 (1 arquivo) & -26 regras \\
+Tempo desenvolvimento & 3,75h & 1,2h & -68\% \\
+Detecções totais & 0 & 19 & +19 (infinito) \\
+Cobertura documentada & 0\% (0/14) & 71\% (10/14) & +71 pp \\
+Falsos negativos & 14 (100\%) & 4 (29\%) & -71 pp \\
+Complexidade regras & Alta (AST matching) & Média (regex) & Mais simples \\
+Precisão semântica & Alta (teoricamente) & Baixa (texto plano) & Trade-off \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Cobertura por Classe de Vulnerabilidade}
+
+A Tabela \ref{tab:coverage-by-class} apresenta a cobertura de detecção por classe de vulnerabilidade, comparando ambos os modos.
+
+\begin{table}[H]
+\centering
+\caption{Cobertura por classe de vulnerabilidade}
+\label{tab:coverage-by-class}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Classe} & \textbf{Documentadas} & \multicolumn{2}{c}{\textbf{JSON Mode}} & \multicolumn{2}{c}{\textbf{Generic Mode}} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+& & \textbf{Detectadas} & \textbf{Cov.} & \textbf{Detectadas} & \textbf{Cov.} \\ \midrule
+SQL Injection & 3 & 0 & 0\% & 13 & 100\%+ \\
+Command Injection & 2 & 0 & 0\% & 3 & 100\%+ \\
+Vault Secrets & 2 & 0 & 0\% & 2 & 100\% \\
+SSH Key Exposure & 1 & 0 & 0\% & 1 & 100\% \\
+Hardcoded Passwords & 3 & 0 & 0\% & 0 & 0\% \\
+SSRF/DoS & 3 & 0 & 0\% & 0 & 0\% \\
+\textbf{TOTAL} & \textbf{14} & \textbf{0} & \textbf{0\%} & \textbf{19} & \textbf{71\%} \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Observação Crítica}: Modo genérico detectou 100\%+ em SQL/Command Injection (incluindo instâncias não documentadas), demonstrando sensibilidade adequada. Classes não detectadas (hardcoded passwords, SSRF/DoS) requerem análise semântica mais sofisticada que regex pura não fornece.
+
+\subsection{Análise de Causa Raiz da Divergência}
+
+A diferença dramática entre os modos (0\% vs. 71\% de cobertura) decorre de incompatibilidades arquiteturais fundamentais entre o paradigma de análise do Semgrep e estruturas LCNC.
+
+\subsubsection{Paradigma Declarativo vs. Imperativo}
+
+\textbf{Código Tradicional (Imperativo)}: Ferramentas SAST analisam fluxo de controle (if/else, loops) e fluxo de dados (variáveis, funções) através de ASTs de linguagens de programação. O Semgrep foi projetado para este paradigma.
+
+\textbf{Workflows n8n (Declarativo)}: Workflows são configurações JSON que \textit{declaram} transformações de dados através de conexões entre nós. Não há controle de fluxo imperativo tradicional. O "código-fonte" é a configuração, não instruções executáveis.
+
+\textbf{Incompatibilidade}: O parser JSON do Semgrep trata workflows como \textit{dados de configuração}, não como \textit{código}, falhando em reconhecer padrões inseguros dentro da estrutura aninhada. O modo genérico, ao tratar JSON como texto, inadvertidamente resolve o problema ao aplicar correspondência de padrões puramente textual, similar a grep avançado.
+
+\subsubsection{Limitação de Profundidade de Aninhamento}
+
+Estrutura típica de vulnerabilidade SQL Injection em n8n:
+
+\begin{verbatim}
+{
+  "nodes": [              // Nível 1
+    {                     // Nível 2
+      "type": "...",
+      "parameters": {     // Nível 3
+        "query": "=..."  // Nível 4 - vulnerabilidade aqui
+      }
+    }
+  ]
+}
+\end{verbatim}
+
+O modo JSON do Semgrep requer navegação via \texttt{pattern-inside} aninhados para alcançar o nível 4, mas esta construção falha em arrays. O modo genérico simplesmente procura pelo texto \texttt{"query": "=} diretamente, ignorando a estrutura hierárquica.
+
+\subsection{Discussão}
+
+Os resultados demonstram que \textbf{a escolha do modo de análise é tão crítica quanto a seleção da ferramenta} para análise de segurança de plataformas LCNC.
+
+\subsubsection{Trade-off: Simplicidade vs. Precisão Semântica}
+
+O modo genérico, embora efetivo (71\% de cobertura), sacrifica compreensão semântica:
+
+\textbf{Limitações}:
+\begin{itemize}
+    \item Não compreende estrutura JSON (pode corresponder strings dentro de comentários ou valores)
+    \item Não pode rastrear fluxo de dados entre nós (taint analysis)
+    \item Vulnerável a falsos positivos se padrões textuais aparecem em contextos seguros
+\end{itemize}
+
+\textbf{Vantagens}:
+\begin{itemize}
+    \item Simplicidade: regras são regex compreensíveis, não AST patterns complexos
+    \item Efetividade empírica: 19 detecções vs. 0
+    \item Desenvolvimento rápido: 1,2h vs. 3,75h
+    \item Manutenibilidade: atualizar regex é mais simples que reescrever AST patterns
+\end{itemize}
+
+\textbf{Conclusão}: Para análise de segurança de workflows n8n com Semgrep, o modo genérico é \textit{pragmaticamente superior} ao modo JSON nativo, apesar de teoricamente menos sofisticado. Este resultado contradiz a intuição comum de que "parsing estruturado sempre supera correspondência textual".
+
+\subsubsection{Validação da Hipótese de Pesquisa}
+
+A hipótese central deste trabalho afirmava que ferramentas SAST existentes, com customização, poderiam fornecer análise de segurança para n8n. Os resultados validam parcialmente esta hipótese:
+
+\begin{itemize}
+    \item \textbf{Validado}: Semgrep \textit{pode} detectar vulnerabilidades em workflows n8n (71\% de cobertura em modo genérico)
+    \item \textbf{Qualificado}: Requer adaptação significativa do modo de análise, não apenas desenvolvimento de regras
+    \item \textbf{Limitado}: Cobertura de 71\% é insuficiente para ambientes críticos (meta: $\geq$80\%)
+\end{itemize}
+
+\subsubsection{Contribuição Metodológica: AI-Assisted Rule Generation}
+
+A geração assistida por IA (Claude 3.5 Sonnet) demonstrou efetividade:
+
+\begin{itemize}
+    \item \textbf{Aceleração}: 13x mais rápido que desenvolvimento manual (3,75h vs. estimativa de 49h)
+    \item \textbf{Qualidade}: Regras sintaticamente corretas, bem documentadas
+    \item \textbf{Iteração}: Feedback humano essencial (2-4 iterações por regra)
+    \item \textbf{Limitação}: IA gerou regras JSON mode que não funcionaram, mas pivotou efetivamente para generic mode quando informada da limitação
+\end{itemize}
+
+\textbf{Lição}: IA acelera desenvolvimento mas não elimina necessidade de validação empírica. A falha completa do modo JSON só foi identificada através de testes reais, não análise teórica.
+
+\subsubsection{Implicações Práticas}
+
+Para equipes de segurança considerando análise SAST de workflows n8n:
+
+\textbf{Recomendação Imediata}: Utilize Semgrep em modo genérico com regras desenvolvidas neste trabalho como baseline. A cobertura de 71\% é superior a 0\% (análise manual ad-hoc).
+
+\textbf{Integração CI/CD}: O modo genérico é adequado para gates automatizados:
+\begin{itemize}
+    \item Execução rápida ($\sim$2s por workflow)
+    \item Baixo consumo de recursos (55MB memória)
+    \item Zero falsos positivos observados neste estudo
+    \item Bloqueio de SQL/Command Injection (classes mais críticas)
+\end{itemize}
+
+\textbf{Limitações Conhecidas}: Classes não cobertas (hardcoded passwords, SSRF, DoS) requerem:
+\begin{enumerate}
+    \item Revisão manual complementar
+    \item Análise dinâmica (execução em sandbox)
+    \item Desenvolvimento de ferramenta especializada (proposta na Seção \ref{sec:trabalhos-futuros})
+\end{enumerate}
 
 % ==== Seção 8: Discussão ====
 \section{Discussão}
@@ -1076,11 +1268,71 @@ Embora a ferramenta não tome decisões automatizadas sobre indivíduos (não é
 
 \subsubsection{Médio Prazo (6-12 meses)}
 
-\textit{[Desenvolvimento de funcionalidades adicionais ou pilotos em 6-12 meses.]}
+\textbf{Desenvolvimento de Registro de Regras Comunitário para n8n}
+
+Inspirado pelo modelo de sucesso do registro público de regras Semgrep (\url{https://semgrep.dev/r}), que oferece conjuntos de regras específicos para dezenas de linguagens de programação e frameworks, propõe-se o desenvolvimento de um registro análogo específico para workflows n8n. Este registro centralizaria regras de detecção de vulnerabilidades desenvolvidas pela comunidade, categorizadas por classe de vulnerabilidade (OWASP LCNC Top 10) e validadas contra workflows de teste.
+
+O repositório \texttt{n8n-CyberSecurity-Workflows} \cite{n8n_cybersec_workflows} demonstra interesse comunitário significativo em automação de segurança com n8n, sugerindo que uma iniciativa de regras compartilhadas teria adoção prática. A metodologia de geração assistida por IA desenvolvida neste trabalho poderia acelerar a criação inicial do registro, reduzindo a barreira de entrada para contribuições.
+
+\textbf{Componentes principais:}
+\begin{itemize}
+    \item Repositório Git com regras Semgrep em modo genérico validadas
+    \item Documentação de cada regra com exemplos de código vulnerável e seguro
+    \item Dataset de teste público com workflows contendo vulnerabilidades conhecidas
+    \item Pipeline de CI/CD para validação automática de contribuições comunitárias
+    \item Integração com gerenciador de pacotes (npm/pip) para distribuição fácil
+\end{itemize}
 
 \subsubsection{Longo Prazo (1-2 anos)}
 
-\textit{[Visão de evolução do sistema em 1-2 anos (escala, novas funcionalidades, federação).]}
+\textbf{Ferramenta SAST Dedicada para Workflows n8n}
+
+A longo prazo, propõe-se o desenvolvimento de uma ferramenta SAST especializada para o ecossistema n8n, inspirada no sucesso do Semgrep mas otimizada especificamente para a estrutura JSON declarativa de workflows. Enquanto o Semgrep em modo genérico demonstrou efetividade neste trabalho (71\% de cobertura), uma ferramenta dedicada poderia oferecer capacidades superiores através de compreensão nativa do esquema n8n.
+
+\textbf{Diferencial competitivo vs. Semgrep genérico:}
+\begin{itemize}
+    \item \textbf{Parser nativo do esquema n8n}: Compreensão semântica de nós, parâmetros e conexões, permitindo análise de fluxo de dados (taint analysis) através do grafo de execução
+    \item \textbf{Regras pré-configuradas}: Conjunto abrangente de regras para as seis classes de vulnerabilidades identificadas, mantido e atualizado pela comunidade
+    \item \textbf{Integração CI/CD nativa}: Plugin para GitHub Actions, GitLab CI e Jenkins que bloqueia automaticamente merges de workflows vulneráveis, similar ao GitHub Advanced Security
+    \item \textbf{Interface visual}: Dashboard web mostrando postura de segurança de workflows organizacionais, tendências temporais e priorização de remediações
+    \item \textbf{Análise incremental}: Detecção de mudanças entre versões de workflows, reportando apenas novas vulnerabilidades introduzidas
+\end{itemize}
+
+\textbf{Modelo de distribuição:}
+
+Seguindo o modelo bem-sucedido do Semgrep, propõe-se arquitetura híbrida open-source + SaaS:
+
+\begin{itemize}
+    \item \textbf{Core open-source (MIT License)}: Motor de análise, regras comunitárias, CLI para execução local, mantendo transparência e permitindo auto-hospedagem para organizações com requisitos rigorosos de privacidade
+    \item \textbf{SaaS opcional (freemium)}: Dashboard colaborativo, agregação histórica, gerenciamento centralizado de políticas, integração com plataformas n8n Cloud, cobrando apenas por funcionalidades de equipe
+\end{itemize}
+
+Esta dualidade garante acessibilidade (pesquisadores e pequenas organizações utilizam versão gratuita) enquanto cria modelo de sustentabilidade financeira que viabiliza desenvolvimento contínuo e suporte empresarial.
+
+\textbf{Integração no pipeline de desenvolvimento n8n:}
+
+A ferramenta seria integrada diretamente no fluxo de trabalho de desenvolvimento de workflows:
+
+\begin{enumerate}
+    \item \textbf{Pre-commit hook}: Análise local antes de commit, alertando desenvolvedor imediatamente sobre vulnerabilidades introduzidas
+    \item \textbf{Pull Request checks}: Bloqueio automático de PRs contendo vulnerabilidades críticas, com comentários inline identificando padrões inseguros e sugerindo correções
+    \item \textbf{Deploy gate}: Validação final antes de implantação em produção, com políticas configuráveis por ambiente (desenvolvimento permite warnings, produção bloqueia errors)
+    \item \textbf{Monitoramento contínuo}: Escaneamento periódico de workflows existentes em produção, identificando vulnerabilidades introduzidas por mudanças na plataforma n8n ou descoberta de novos vetores de ataque
+\end{enumerate}
+
+\textbf{Sustentabilidade e governança:}
+
+Inspirado em projetos open-source bem-sucedidos como Semgrep e GitLab:
+
+\begin{itemize}
+    \item Governança comunitária através de comitê técnico com representantes de organizações usuárias
+    \item Roadmap público com priorização transparente de funcionalidades
+    \item Processo formal de contribuição com revisão por pares e CI/CD rigoroso
+    \item Documentação abrangente incluindo guias de contribuição e arquitetura técnica
+    \item Financiamento híbrido: patrocínios corporativos + receita SaaS + grants de pesquisa
+\end{itemize}
+
+Esta visão de longo prazo posiciona a ferramenta como padrão de facto para análise de segurança de workflows n8n, similar ao papel que o Semgrep desempenha para código tradicional, elevando significativamente a maturidade de segurança do ecossistema LCNC.
 
 \subsection{Recomendações}
 

@@ -1,0 +1,86 @@
+rules:
+  - id: n8n-pgpassword-injection
+    message: |
+      Detected PGPASSWORD with n8n dynamic expression. Password could contain
+      shell metacharacters leading to command injection.
+    severity: ERROR
+    languages:
+      - generic
+    metadata:
+      category: security
+      cwe: CWE-78
+    patterns:
+      - pattern-regex: 'PGPASSWORD.*\{\{.*\}\}'
+
+  - id: n8n-ssh-key-exposed
+    message: |
+      Detected hardcoded SSH key. Keys should not be embedded in workflows.
+    severity: WARNING
+    languages:
+      - generic
+    metadata:
+      category: security
+      cwe: CWE-798
+    patterns:
+      - pattern-regex: 'ssh-(rsa|ed25519|dss)\s+[A-Za-z0-9+/=]{50,}'
+
+  - id: n8n-command-with-expression
+    message: |
+      SSH or execute command with n8n expression. Risk of command injection.
+    severity: ERROR
+    languages:
+      - generic
+    metadata:
+      category: security
+      cwe: CWE-78
+    patterns:
+      - pattern-regex: '"command":\s*"=.*\{\{.*\$json.*\}\}'
+
+  - id: n8n-hardcoded-password-in-json
+    message: |
+      Hardcoded password found in workflow. Use n8n credentials instead.
+    severity: ERROR
+    languages:
+      - generic
+    metadata:
+      category: security
+      cwe: CWE-798
+    patterns:
+      - pattern-regex: '"password":\s*"[A-Za-z0-9!@#$%^&*]{8,}"'
+      - pattern-not-regex: '\{\{'
+
+  - id: n8n-sql-injection-risk
+    message: |
+      SQL query with dynamic n8n expression. Risk of SQL injection.
+    severity: ERROR
+    languages:
+      - generic
+    metadata:
+      category: security
+      cwe: CWE-89
+    patterns:
+      - pattern-regex: '(SELECT|INSERT|UPDATE|DELETE|FROM|WHERE).*\{\{.*\$json'
+
+  - id: n8n-delete-dynamic-url
+    message: |
+      HTTP DELETE with dynamic URL. Risk of unauthorized deletion.
+    severity: ERROR
+    languages:
+      - generic
+    metadata:
+      category: security
+      cwe: CWE-285
+    patterns:
+      - pattern-regex: '"method":\s*"DELETE"'
+      - pattern-regex: '"url":\s*"=.*\{\{.*\}\}'
+
+  - id: n8n-vault-secret-operation
+    message: |
+      Operation on Vault secrets endpoint. Ensure proper authorization.
+    severity: WARNING
+    languages:
+      - generic
+    metadata:
+      category: security
+    patterns:
+      - pattern-regex: 'vault.*/(metadata|data)/.*\{\{.*\}\}'
