@@ -518,169 +518,421 @@ O trabalho será considerado bem-sucedido se os seguintes critérios forem satis
 
 A satisfação dos cinco critérios estabelece que a abordagem híbrida é viável e representa contribuição significativa para segurança de plataformas LCNC.
 
-% ==== Seção 4: Escopo da Solução ====
+% ==== Seção 5: Escopo da Solução ====
 \section{Escopo da Solução e Requisitos}
 \label{sec:escopo}
 
-\textit{[Detalhar os casos de uso, arquitetura do sistema, requisitos técnicos e composição dos dados.]}
+Esta seção detalha o escopo da solução proposta, definindo claramente os casos de uso cobertos, a arquitetura do sistema, os requisitos técnicos e a composição dos dados de validação. O foco é estabelecer expectativas realistas sobre o que será entregue no contexto de validação de viabilidade técnica, distinguindo explicitamente entre funcionalidades incluídas e excluídas do escopo.
 
 \subsection{Casos de Uso}
 
-\textit{[Descrever os principais fluxos de interação com o sistema.]}
+Os casos de uso definem as interações principais entre os usuários e o sistema, estabelecendo o escopo funcional da solução proposta. O foco está na análise estática de segurança de workflows individuais e em lote, reconhecendo que este é um projeto de validação de viabilidade técnica, não uma ferramenta de produção completa.
 
-\subsubsection{Caso de Uso Principal}
+\subsubsection{Caso de Uso Principal: Análise de Segurança de Workflow n8n}
 
-\textit{[Detalhar o cenário principal de uso incluindo atores, pré-condições, fluxo principal e fluxos alternativos.]}
+O cenário principal de uso representa o fluxo típico de análise de segurança executado por um desenvolvedor ou analista de segurança que deseja avaliar a postura de segurança de um workflow específico do n8n.
 
-\textbf{Ator primário:} \textit{[Nome do ator]} \\
+\textbf{Ator primário:} Desenvolvedor ou Analista de Segurança \\
+
 \textbf{Pré-condições:}
 \begin{itemize}
-    \item \textit{[Pré-condição 1]}
-    \item \textit{[Pré-condição 2]}
+    \item O workflow do n8n foi exportado em formato JSON através da interface da plataforma
+    \item As ferramentas de análise (Agentic Radar e Semgrep) estão instaladas e configuradas no ambiente
+    \item O conjunto de regras customizadas do Semgrep está disponível e atualizado
+    \item O ambiente possui conectividade de rede (caso o Agentic Radar utilize o modo \texttt{test} que requer API da OpenAI)
 \end{itemize}
 
 \textbf{Fluxo principal:}
 \begin{enumerate}
-    \item \textit{[Passo 1]}
-    \item \textit{[Passo 2]}
-    \item \textit{[Passo 3]}
+    \item O usuário fornece o arquivo JSON do workflow como entrada para o sistema de análise
+    \item O sistema executa a análise híbrida, invocando sequencialmente:
+    \begin{itemize}
+        \item Agentic Radar em modo \texttt{scan} para detecção de riscos de IA agêntica
+        \item Semgrep com conjunto de regras customizadas para vulnerabilidades tradicionais
+    \end{itemize}
+    \item O sistema processa os resultados de ambas as ferramentas, consolidando as detecções e eliminando duplicatas
+    \item O sistema classifica as vulnerabilidades detectadas por severidade (Crítica, Alta, Média, Baixa) e mapeia cada detecção à categoria correspondente do OWASP LCNC Top 10
+    \item O sistema gera um relatório consolidado em formato estruturado (JSON) e legível por humanos (HTML ou texto formatado)
+    \item O usuário revisa o relatório gerado, compreende as vulnerabilidades identificadas através das explicações técnicas e sugestões de remediação, e prioriza as correções baseando-se na severidade e categoria OWASP
 \end{enumerate}
 
 \textbf{Fluxos alternativos:}
 \begin{itemize}
-    \item \textit{[Alternativa 1]}
-    \item \textit{[Alternativa 2]}
+    \item \textbf{Análise em lote:} O usuário fornece um diretório contendo múltiplos arquivos JSON de workflows. O sistema itera sobre todos os arquivos, executando a análise híbrida em cada um, e gera um relatório agregado identificando workflows por nome e consolidando estatísticas de vulnerabilidades por tipo e severidade.
+\end{itemize}
+
+\textbf{Pós-condições:}
+\begin{itemize}
+    \item Relatório de análise de segurança disponível para revisão
+    \item Vulnerabilidades documentadas com localização específica no workflow (identificador do nó, parâmetro afetado)
+    \item Recomendações de remediação disponíveis para cada vulnerabilidade detectada
 \end{itemize}
 
 \subsubsection{Casos Excluídos do Escopo}
 
-\textit{[Listar explicitamente casos de uso que NÃO serão implementados na PoC.]}
+Para manter o foco na validação de viabilidade técnica da abordagem híbrida e da metodologia de geração de regras assistida por IA, os seguintes casos de uso são explicitamente excluídos do escopo deste trabalho:
+
+\begin{itemize}
+    \item \textbf{Análise dinâmica ou execução real de workflows:} O sistema não executará workflows para detectar vulnerabilidades em tempo de execução. A análise é puramente estática, operando sobre a estrutura JSON declarativa.
+
+    \item \textbf{Interface gráfica completa para usuários finais:} Não será desenvolvida uma interface web ou desktop. A interação ocorre via linha de comando (CLI), adequada para usuários técnicos e integração futura em pipelines automatizados.
+
+    \item \textbf{Correção automática de vulnerabilidades detectadas:} O sistema identifica e reporta vulnerabilidades, mas não modifica automaticamente os workflows para corrigi-las. A remediação permanece responsabilidade do desenvolvedor.
+
+    \item \textbf{Análise de nós customizados da comunidade:} O foco está nos nós oficiais da base do n8n (\texttt{n8n-nodes-base.*}). Nós desenvolvidos pela comunidade ou customizados não são cobertos pelas regras de detecção.
+
+    \item \textbf{Otimização de performance de workflows:} O sistema não avalia eficiência computacional, uso de recursos ou otimizações de performance. O foco é exclusivamente em vulnerabilidades de segurança.
+
+    \item \textbf{Integração em pipelines CI/CD com bloqueio automático:} Embora o Semgrep possua integrações nativas com plataformas de CI/CD, a configuração e implantação de integrações automatizadas em ambientes de produção estão fora do escopo deste trabalho de validação.
+
+    \item \textbf{Visualização gráfica de fluxos de trabalho:} Não será desenvolvido um componente de renderização de grafos interativos dos workflows. Embora o Agentic Radar possua esta capacidade, a replicação ou integração deste recurso não é essencial para validar a viabilidade da detecção de vulnerabilidades.
+\end{itemize}
 
 \subsection{Arquitetura Proposta}
 
-\textit{[Apresentar a arquitetura lógica do sistema, preferencialmente com diagramas, explicando as camadas, componentes e fluxo de dados. Incluir considerações de segurança (defense in depth, privacy by design).]}
+A arquitetura do sistema fundamenta-se em uma abordagem híbrida que combina as forças complementares do Agentic Radar e do Semgrep para alcançar cobertura abrangente das seis classes de vulnerabilidades identificadas. O design privilegia modularidade, permitindo que cada ferramenta opere independentemente e que os resultados sejam agregados de forma consistente.
 
-% Exemplo de inclusão de figura (descomente quando tiver a imagem):
-% \begin{figure}[htb]
-% \centering
-% \includegraphics[width=0.9\textwidth]{figures/arquitetura.png}
-% \caption{Arquitetura lógica do sistema}
-% \label{fig:arquitetura}
-% \end{figure}
+\subsubsection{Visão Geral da Arquitetura em Camadas}
+
+A arquitetura é organizada em quatro camadas principais que representam o fluxo de processamento desde a entrada de dados até a geração de relatórios:
+
+\begin{enumerate}
+    \item \textbf{Camada de Entrada de Dados:} Responsável pela leitura e validação de arquivos JSON de workflows, verificando conformidade com o esquema esperado do n8n.
+
+    \item \textbf{Camada de Motores de Análise:} Executa as ferramentas de detecção de vulnerabilidades em paralelo ou sequencialmente, invocando o Agentic Radar e o Semgrep sobre os workflows de entrada.
+
+    \item \textbf{Camada de Agregação e Classificação:} Consolida os resultados heterogêneos das duas ferramentas em um formato unificado, elimina duplicatas e classifica detecções por severidade e categoria OWASP.
+
+    \item \textbf{Camada de Geração de Relatórios:} Produz relatórios estruturados e legíveis contendo as vulnerabilidades detectadas, explicações técnicas e recomendações de remediação.
+\end{enumerate}
+
+Esta arquitetura em camadas promove separação de responsabilidades, facilitando testes unitários de cada componente e permitindo substituição ou atualização de ferramentas individuais sem impacto no sistema completo.
 
 \subsubsection{Componentes Principais}
 
-\textit{[Descrever em detalhes cada componente da arquitetura (frontend, backend, modelo de ML, sistema de logs, etc.) e suas responsabilidades.]}
+A implementação da arquitetura proposta requer cinco componentes principais, cada um com responsabilidades claramente definidas:
+
+\textbf{A. Módulo de Entrada e Validação}
+
+Este componente é responsável pela interface entre o usuário e o sistema de análise. Suas funções incluem:
+
+\begin{itemize}
+    \item Parser JSON robusto que lê arquivos de workflow e valida a estrutura contra o esquema esperado (presença dos arrays \texttt{nodes} e \texttt{connections}, estrutura de objetos de nó)
+    \item Extração de metadados do workflow (nome, versão, contagem de nós, tipos de nós presentes)
+    \item Tratamento de erros para arquivos malformados ou inválidos, gerando mensagens informativas para o usuário
+    \item Suporte a análise em lote, iterando sobre diretórios de workflows e mantendo associação entre arquivos e resultados
+\end{itemize}
+
+A validação estrutural neste estágio previne falhas nas ferramentas de análise downstream e fornece feedback rápido sobre problemas de formato.
+
+\textbf{B. Motor de Análise Híbrida}
+
+Este componente orquestra a execução das duas ferramentas de análise, gerenciando suas invocações e capturando suas saídas. Consiste em dois submódulos:
+
+\begin{itemize}
+    \item \textbf{Executor do Agentic Radar:} Invoca o comando \texttt{agentic-radar scan} sobre o arquivo JSON do workflow, captura a saída (tipicamente em formato HTML ou JSON estruturado), e extrai as vulnerabilidades relacionadas a riscos de IA agêntica. Este submódulo é responsável pela cobertura de aproximadamente 16,7\% das classes de vulnerabilidades, focando em injeção de prompt, vazamento de PII através de respostas de modelos de linguagem e geração de conteúdo prejudicial.
+
+    \item \textbf{Executor do Semgrep:} Invoca o comando \texttt{semgrep --config=rules/ --json} sobre o arquivo JSON do workflow, utilizando o conjunto de regras customizadas desenvolvidas especificamente para o esquema do n8n. Captura a saída em formato JSON estruturado (SARIF ou formato nativo do Semgrep) e extrai as vulnerabilidades relacionadas a SQL Injection, Command Injection, SSRF, Secret Sprawl, Insecure Data Handling e DoS. Este submódulo é responsável pela cobertura potencial de aproximadamente 66,7\% das classes de vulnerabilidades.
+\end{itemize}
+
+A execução pode ser paralela (para maximizar velocidade) ou sequencial (para simplificar tratamento de erros), dependendo das restrições de recursos do ambiente.
+
+\textbf{C. Módulo de Agregação e Normalização}
+
+Este componente recebe as saídas heterogêneas das duas ferramentas e as transforma em um formato unificado. Suas responsabilidades incluem:
+
+\begin{itemize}
+    \item Parsing dos formatos de saída específicos de cada ferramenta (HTML/JSON do Agentic Radar, JSON/SARIF do Semgrep)
+    \item Normalização das detecções em um esquema comum contendo: identificador único, descrição da vulnerabilidade, localização exata no workflow (nó e parâmetro), severidade, categoria de vulnerabilidade e ferramenta que detectou
+    \item Eliminação de duplicatas através de comparação de localização e tipo de vulnerabilidade (caso ambas as ferramentas detectem a mesma instância)
+    \item Classificação de severidade em quatro níveis (Crítica, Alta, Média, Baixa) baseando-se na severidade reportada pelas ferramentas e na categoria OWASP associada
+    \item Enriquecimento com contexto adicional quando disponível (trecho do JSON afetado, linha no arquivo)
+\end{itemize}
+
+\textbf{D. Módulo de Mapeamento OWASP}
+
+Este componente enriquece cada vulnerabilidade detectada com classificações padronizadas de segurança:
+
+\begin{itemize}
+    \item Mapeamento explícito para categorias do OWASP LCNC Top 10 (LCNC-SEC-05, LCNC-SEC-06, LCNC-SEC-07, LCNC-SEC-08) baseando-se no tipo de vulnerabilidade detectada
+    \item Enriquecimento com códigos CWE (Common Weakness Enumeration) quando aplicável (ex.: CWE-89 para SQL Injection, CWE-78 para Command Injection, CWE-918 para SSRF)
+    \item Adição de referências a documentação relevante (links para páginas do OWASP LCNC Top 10, artigos de mitigação, melhores práticas do n8n)
+\end{itemize}
+
+Este mapeamento facilita a comunicação de riscos com stakeholders não técnicos através de taxonomias reconhecidas pela indústria.
+
+\textbf{E. Gerador de Relatórios}
+
+Este componente produz as saídas finais consumidas pelos usuários:
+
+\begin{itemize}
+    \item \textbf{Relatório estruturado em JSON:} Formato machine-readable contendo todas as detecções com metadados completos, adequado para processamento automatizado ou integração com outras ferramentas
+    \item \textbf{Relatório legível em HTML ou texto formatado:} Apresentação organizada das vulnerabilidades agrupadas por severidade e categoria OWASP, incluindo explicações técnicas e sugestões de remediação
+    \item \textbf{Sumário executivo:} Estatísticas agregadas (contagem de vulnerabilidades por tipo, por severidade, por nó afetado) fornecendo visão geral rápida da postura de segurança do workflow
+\end{itemize}
 
 \subsection{Requisitos Técnicos}
 
-\textit{[Especificar as tecnologias, frameworks e infraestrutura necessários.]}
+Os requisitos técnicos especificam as tecnologias, frameworks e infraestrutura necessários para implementação e execução da solução proposta.
 
 \subsubsection{Tecnologias e Frameworks}
 
-\textit{[Listar em formato de tabela as tecnologias escolhidas para cada camada/componente com justificativas técnicas.]}
+A seleção de tecnologias priorizou maturidade, compatibilidade com as ferramentas de análise e acessibilidade para a comunidade de segurança. A Tabela \ref{tab:stack} sintetiza o stack tecnológico.
 
-\begin{table}[htb]
+\begin{table}[H]
 \centering \small
-\caption{Stack tecnológico}
+\caption{Stack tecnológico da solução proposta}
 \label{tab:stack}
-\begin{tabular}{@{}llp{8cm}@{}}
+\begin{tabular}{@{}llp{7.5cm}@{}}
 \toprule
 \textbf{Camada} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \midrule
-% Adicione suas tecnologias aqui
+Análise IA Agentes & Agentic Radar & Única ferramenta open-source especializada em riscos de IA agêntica para workflows de automação, com suporte comprovado para n8n \\[0.3cm]
+Análise Tradicional & Semgrep & Motor SAST maduro e amplamente adotado, com suporte nativo a JSON, linguagem de regras acessível e capacidades de taint analysis \\[0.3cm]
+Linguagem Principal & Python 3.10+ & Compatibilidade com ambas as ferramentas (Agentic Radar requer Python >= 3.10 < 3.13), ecossistema rico de bibliotecas para processamento JSON e geração de relatórios \\[0.3cm]
+Processamento JSON & Python \texttt{json} & Biblioteca padrão para parsing e manipulação de workflows, sem dependências externas \\[0.3cm]
+Geração de Regras & Claude 3.5 Sonnet (API Anthropic) & Modelo de linguagem de grande capacidade para geração assistida de regras Semgrep, acelerando desenvolvimento através de prompts estruturados e few-shot learning \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+A escolha do Python como linguagem principal é justificada pela necessidade de compatibilidade com as ferramentas de análise e pela disponibilidade de bibliotecas robustas para as tarefas requeridas. A utilização de Claude 3.5 Sonnet para geração de regras representa uma inovação metodológica, reduzindo drasticamente o tempo de desenvolvimento de regras customizadas de 8-12 horas por regra para aproximadamente 2 horas, conforme será demonstrado na validação experimental.
+
 \subsubsection{Infraestrutura Mínima}
 
-\textit{[Especificar requisitos de hardware (CPU, GPU, RAM, disco) e rede para desenvolvimento, treinamento e deploy.]}
+Os requisitos de infraestrutura são modestos, refletindo a natureza de análise estática da solução que não requer recursos computacionais intensivos como GPUs ou grandes quantidades de memória.
 
-\subsubsection{Dados de Treinamento e Validação}
+\textbf{Ambiente de Desenvolvimento:}
+\begin{itemize}
+    \item \textbf{CPU:} 2 cores (análise estática não requer processamento intensivo)
+    \item \textbf{RAM:} 4GB (suficiente para parsing de workflows típicos de até 100 nós)
+    \item \textbf{Armazenamento:} 2GB (instalação de ferramentas, regras customizadas e workflows de teste)
+    \item \textbf{Python:} Versão 3.10, 3.11 ou 3.12 (compatibilidade com Agentic Radar)
+    \item \textbf{Sistema Operacional:} Linux, macOS ou Windows (ferramentas são multiplataforma)
+\end{itemize}
 
-\textit{[Descrever a composição do dataset (quantidade, proporções, fontes), estratégia de divisão (treino/validação/teste) e considerações de privacidade.]}
+\textbf{Ambiente de Execução:}
+\begin{itemize}
+    \item Ambiente local ou containerizado (Docker) para portabilidade
+    \item Capacidade de execução paralela opcional para análise em lote de múltiplos workflows
+    \item Conectividade de rede caso o modo \texttt{test} do Agentic Radar seja utilizado (requer acesso à API da OpenAI)
+\end{itemize}
 
-\begin{table}[htb]
+A infraestrutura mínima garante que a solução possa ser executada em laptops de desenvolvimento típicos, sem necessidade de servidores dedicados ou infraestrutura cloud, reduzindo barreiras de adoção e custos operacionais.
+
+\subsubsection{Dados de Validação}
+
+A validação da abordagem proposta requer um dataset controlado de workflows com vulnerabilidades conhecidas, servindo como ground truth para avaliar precisão, recall e taxa de falsos positivos das ferramentas.
+
+\textbf{Composição do Dataset:}
+
+O dataset de validação consiste em \textbf{3 workflows sintéticos} desenvolvidos especificamente para este trabalho, cada um implementando deliberadamente 2 das 6 classes de vulnerabilidades identificadas. Esta abordagem garante cobertura balanceada de todas as categorias e permite validação controlada onde a localização exata e a natureza de cada vulnerabilidade são conhecidas a priori.
+
+A Tabela \ref{tab:dataset} detalha a composição do dataset de validação.
+
+\begin{table}[H]
 \centering \small
-\caption{Composição do dataset}
+\caption{Composição do dataset de workflows de validação}
 \label{tab:dataset}
-\begin{tabular}{@{}lrrr@{}}
+\begin{tabular}{@{}p{2.5cm}p{5cm}p{5cm}@{}}
 \toprule
-\textbf{Conjunto} & \textbf{Classe A} & \textbf{Classe B} & \textbf{Total} \\ \midrule
-Treinamento (70\%) & & & \\
-Validação (15\%) & & & \\
-Teste (15\%) & & & \\ \midrule
-\textbf{Total} & & & \\ \bottomrule
+\textbf{Workflow} & \textbf{Vulnerabilidades Implementadas} & \textbf{Nós e Padrões Envolvidos} \\ \midrule
+\textbf{Workflow 1:} Integração de Dados & SQL Injection + SSRF & Nó Webhook recebendo entrada externa → Nó MySQL com query dinâmica sem sanitização; Nó HTTP Request com URL construída dinamicamente \\[0.4cm]
+\textbf{Workflow 2:} Automação de Sistema & Command Injection + Secret Sprawl & Nó Webhook → Nó Execute Command com parâmetro \texttt{command} contendo expressão dinâmica; Credenciais hardcoded em parâmetros de configuração \\[0.4cm]
+\textbf{Workflow 3:} Processamento de Dados Sensíveis & Insecure Data Handling + DoS & Nó HTTP Request usando \texttt{http://} sem TLS para transmissão de dados; Estrutura de loop sem condição de saída clara no grafo de conexões \\ \bottomrule
 \end{tabular}
 \end{table}
+
+\textbf{Documentação de Ground Truth:}
+
+Cada workflow no dataset é acompanhado de documentação detalhada especificando:
+
+\begin{itemize}
+    \item \textbf{Localização exata:} Identificador do nó afetado, nome do parâmetro contendo a vulnerabilidade, linha no arquivo JSON
+    \item \textbf{Categoria OWASP:} Mapeamento para a categoria relevante do OWASP LCNC Top 10 (LCNC-SEC-05, LCNC-SEC-06, LCNC-SEC-07, LCNC-SEC-08)
+    \item \textbf{Severidade esperada:} Classificação da severidade (Crítica, Alta, Média, Baixa) baseada no potencial de impacto e exploração
+    \item \textbf{Descrição técnica:} Explicação de como a vulnerabilidade se manifesta no workflow específico e por que é insegura
+    \item \textbf{Mitigação sugerida:} Exemplo de correção que remediaria a vulnerabilidade
+\end{itemize}
+
+Esta documentação serve como baseline para cálculo de métricas de validação: uma detecção é considerada True Positive se a ferramenta identifica corretamente a vulnerabilidade na localização documentada e com classificação de severidade compatível (variação de ±1 nível é aceitável). A ausência de detecção de uma vulnerabilidade documentada constitui False Negative, enquanto detecções em código seguro (inexistentes neste dataset sintético) constituiriam False Positives.
+
+\textbf{Considerações de Privacidade:}
+
+Os workflows sintéticos não contêm dados reais, credenciais válidas ou referências a sistemas de produção. Toda lógica de negócio, URLs, credenciais e dados são fictícios, garantindo que o dataset possa ser compartilhado publicamente sem riscos de privacidade ou conformidade. Esta abordagem também permite foco exclusivo nas estruturas de vulnerabilidades, sem distrações de lógica de negócio complexa de workflows reais.
 
 % ==== Seção 5: Threat Model ====
 \section{Ameaças, Riscos e Controles}
 \label{sec:threat-model}
 
-\textit{[Aplicar metodologia STRIDE para identificação sistemática de ameaças, analisar riscos específicos de sistemas de ML, e estabelecer controles de mitigação.]}
+Esta seção aplica metodologias estruturadas de análise de segurança para identificar sistematicamente as ameaças, avaliar riscos e estabelecer controles de mitigação para a ferramenta SAST proposta. A análise fundamenta-se no modelo STRIDE (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege) para categorização de ameaças, complementada por considerações específicas sobre o uso de inteligência artificial e requisitos de privacidade conforme a LGPD.
 
 \subsection{Superfícies de Ataque}
 
-\textit{[Enumerar todos os pontos do sistema que podem ser explorados por atacantes.]}
+A identificação das superfícies de ataque é fundamental para compreender os pontos de entrada e dependências que podem ser explorados por atacantes. A arquitetura híbrida proposta, combinando Agentic Radar e Semgrep com geração assistida de regras utilizando IA, apresenta quatro superfícies de ataque principais:
+
+\textbf{1. Entrada de Dados (Workflows JSON):} A ferramenta processa arquivos JSON de workflows do n8n fornecidos pelo usuário. Estes arquivos podem ser malformados intencionalmente, contendo estruturas profundamente aninhadas projetadas para explorar vulnerabilidades no parser JSON, ou podem conter payloads maliciosos embutidos em expressões dinâmicas que tentam enganar os motores de análise.
+
+\textbf{2. Integrações com APIs de IA Externas:} A metodologia de geração assistida de regras depende da API da Anthropic (Claude 3.5 Sonnet) para criação de regras Semgrep, enquanto o Agentic Radar, quando utilizado no modo \texttt{test}, requer comunicação com a API da OpenAI para execução de testes adversariais. Estas dependências externas introduzem riscos de privacidade, disponibilidade e integridade.
+
+\textbf{3. Base de Conhecimento (Regras e Configurações):} O conjunto de regras Semgrep customizadas, armazenadas em arquivos YAML, constitui a base de conhecimento de segurança da ferramenta. A adulteração destas regras pode resultar em cegueira intencional a vulnerabilidades específicas, comprometendo a efetividade da análise.
+
+\textbf{4. Ambiente de Execução Local:} A ferramenta é executada localmente através de interface de linha de comando (CLI), processando workflows no ambiente do usuário. Vulnerabilidades em bibliotecas dependentes (parser JSON, motor Semgrep, Agentic Radar) ou configurações inseguras do ambiente podem ser exploradas para execução de código arbitrário.
 
 \subsection{Análise STRIDE}
 
-\textit{[Apresentar matriz completa de ameaças usando categorias STRIDE (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege) com controles correspondentes.]}
+A aplicação sistemática do modelo STRIDE permite categorizar ameaças de segurança e estabelecer controles de mitigação correspondentes. A Tabela \ref{tab:stride} apresenta a matriz completa de ameaças identificadas para a ferramenta SAST proposta.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Matriz de ameaças STRIDE}
+\caption{Matriz de ameaças STRIDE para a ferramenta SAST}
 \label{tab:stride}
 \begin{tabular}{@{}p{2cm}p{4.5cm}p{5cm}@{}}
 \toprule
 \textbf{Categoria} & \textbf{Ameaça} & \textbf{Controle} \\ \midrule
-\textbf{Spoofing} & & \\
-\textbf{Tampering} & & \\
-\textbf{Repudiation} & & \\
-\textbf{Information Disclosure} & & \\
-\textbf{Denial of Service} & & \\
-\textbf{Elevation of Privilege} & & \\
+\textbf{Spoofing} & Falsificação de identidade de workflows ou adulteração de metadados para mascarar origem maliciosa & Validação de assinatura digital de workflows (quando disponível) e verificação de integridade de arquivos JSON através de hash SHA-256 antes do processamento \\[0.3cm]
+\textbf{Tampering} & Modificação maliciosa das regras Semgrep locais para criar cegueira intencional a vulnerabilidades específicas & Controle de versão das regras através de Git, verificação de integridade (hash) antes da execução, e assinatura digital das regras oficiais \\[0.3cm]
+\textbf{Repudiation} & Ausência de registros auditáveis sobre execuções da ferramenta, impedindo rastreabilidade de análises realizadas & Geração de logs estruturados (formato JSON) contendo timestamp, hash do workflow analisado, versão das regras utilizadas e resumo de detecções, armazenados localmente com proteção de integridade \\[0.3cm]
+\textbf{Information Disclosure} & Vazamento de credenciais hardcoded em workflows através de relatórios de segurança ou logs; transmissão de lógica de negócio proprietária para APIs de IA externas & Redação automática de padrões de segredos (chaves de API, tokens) nos relatórios; anonimização de dados antes do envio para APIs de IA; preferência por análise local (Semgrep) para workflows contendo informações sensíveis \\[0.3cm]
+\textbf{Denial of Service} & Submissão de "JSON Bombs" (arquivos com aninhamento profundo ou estruturas recursivas) projetados para estourar memória do parser ou travar o motor de análise & Validação de limites de recursos: profundidade máxima de aninhamento JSON (32 níveis), tamanho máximo de arquivo (10MB), timeout de análise (60 segundos), e monitoramento de uso de memória durante o parsing \\[0.3cm]
+\textbf{Elevation of Privilege} & Exploração de vulnerabilidades em bibliotecas dependentes (parser JSON, motor Semgrep) ou execução de código JavaScript embutido em expressões dinâmicas do n8n durante análise & Execução em ambiente isolado (sandbox) quando disponível; validação rigorosa de entrada antes do parsing; uso de versões atualizadas e auditadas de dependências; desabilitação de execução de código JavaScript durante análise estática \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Ataques Específicos a Modelos de ML}
+\subsubsection{Análise Detalhada por Categoria}
 
-\textit{[Detalhar ameaças particulares a sistemas de aprendizado de máquina.]}
+\textbf{Spoofing:} O risco de falsificação é relativamente baixo em execução local, onde o usuário possui controle direto sobre os arquivos analisados. No entanto, em cenários onde workflows são compartilhados entre equipes ou obtidos de fontes externas, existe o risco de adulteração de metadados (nome do workflow, versão) para mascarar a origem maliciosa. A implementação de verificação de integridade através de hash SHA-256 permite detectar modificações não autorizadas, enquanto assinaturas digitais (quando disponíveis) fornecem garantias de autenticidade.
 
-\subsubsection{Evasion Attacks}
+\textbf{Tampering:} A adulteração das regras Semgrep representa uma ameaça crítica, pois pode resultar em cegueira intencional a vulnerabilidades específicas, criando uma falsa sensação de segurança. O controle de versão através de Git permite rastreabilidade completa de modificações, enquanto verificação de hash antes da execução detecta adulterações não autorizadas. Para ambientes de produção, recomenda-se assinatura digital das regras oficiais utilizando chaves criptográficas gerenciadas centralmente.
 
-\textit{[Descrever ataques adversariais que tentam enganar o modelo em tempo de inferência e controles de mitigação.]}
+\textbf{Repudiation:} A ausência de registros auditáveis impede a rastreabilidade de análises realizadas, dificultando investigações de segurança e conformidade regulatória. A geração de logs estruturados em formato JSON, contendo timestamp, hash do workflow, versão das regras e resumo de detecções, estabelece um registro imutável de todas as execuções. A proteção de integridade dos logs através de hash ou assinatura digital previne adulteração posterior.
 
-\subsubsection{Data Poisoning}
+\textbf{Information Disclosure:} Esta categoria apresenta riscos críticos devido à natureza sensível dos dados processados. Workflows podem conter credenciais hardcoded (chaves de API, tokens de acesso, senhas), lógica de negócio proprietária e referências a infraestrutura interna. A redação automática de padrões de segredos nos relatórios (substituição por \texttt{[REDACTED]}) previne vazamento acidental através de compartilhamento de relatórios. A anonimização de dados antes do envio para APIs de IA (remoção de identificadores, substituição de valores por placeholders) protege propriedade intelectual. Para workflows altamente sensíveis, recomenda-se desabilitar completamente o uso de APIs externas, utilizando apenas análise local do Semgrep.
 
-\textit{[Explicar riscos de contaminação do conjunto de treinamento e medidas preventivas.]}
+\textbf{Denial of Service:} Ataques de negação de serviço podem ser executados através de arquivos JSON malformados projetados para explorar vulnerabilidades no parser ou consumir recursos computacionais excessivos. "JSON Bombs" com aninhamento profundo podem causar estouro de pilha (stack overflow) em parsers recursivos, enquanto estruturas recursivas podem resultar em loops infinitos durante a análise. A implementação de limites rigorosos de recursos (profundidade máxima, tamanho de arquivo, timeout) e monitoramento de uso de memória previne estes ataques, garantindo que a ferramenta falhe graciosamente sem comprometer a estabilidade do sistema.
 
-\subsubsection{Model Extraction}
+\textbf{Elevation of Privilege:} A exploração de vulnerabilidades em bibliotecas dependentes ou execução de código JavaScript embutido em expressões dinâmicas do n8n durante análise estática representa um risco significativo. Embora a análise estática não deva executar código, parsers mal implementados podem inadvertidamente processar expressões de forma insegura. A execução em ambiente isolado (sandbox), quando disponível, limita o impacto de explorações. A validação rigorosa de entrada antes do parsing e o uso de versões atualizadas e auditadas de dependências reduzem a superfície de ataque.
 
-\textit{[Abordar riscos de roubo de modelo proprietário através de queries e contramedidas.]}
+\subsection{Riscos Específicos de Sistemas Baseados em IA}
 
-\subsection{Considerações de Privacidade (LINDDUN)}
+A integração de inteligência artificial na ferramenta proposta, através da geração assistida de regras utilizando Claude 3.5 Sonnet e do Agentic Radar que utiliza modelos de linguagem para análise, introduz categorias específicas de riscos que transcendem vulnerabilidades tradicionais de software.
 
-\textit{[Aplicar metodologia LINDDUN para análise sistemática de riscos de privacidade (Linkability, Identifiability, Non-repudiation, Detectability, Disclosure, Unawareness, Non-compliance).]}
+\subsubsection{Privacidade e Confidencialidade de Dados}
+
+O envio de descrições de vulnerabilidades, exemplos de código ou trechos de workflows para APIs de IA externas (Anthropic, OpenAI) cria riscos significativos de vazamento de propriedade intelectual e lógica de negócio proprietária. Workflows corporativos frequentemente contêm referências a sistemas internos, padrões de integração específicos da organização e estruturas de dados que revelam informações estratégicas.
+
+\textbf{Controles de Mitigação:}
+\begin{itemize}
+    \item \textbf{Anonimização Proativa:} Remoção de identificadores únicos (nomes de sistemas, URLs internas, referências a clientes) antes do envio para APIs externas, substituindo por placeholders genéricos.
+    \item \textbf{Política de Retenção Zero:} Preferência por modelos de IA que oferecem políticas de retenção zero (Enterprise), garantindo que dados não sejam utilizados para treinamento de modelos futuros.
+    \item \textbf{Modelos Auto-hospedados:} Para organizações com requisitos rigorosos de conformidade, considerar migração futura para modelos de IA auto-hospedados (ex.: Llama 2, Mistral) que eliminam completamente a transmissão de dados para serviços externos.
+    \item \textbf{Segmentação de Dados:} Limitar o escopo de dados enviados para APIs, transmitindo apenas trechos mínimos necessários para geração de regras, evitando envio de workflows completos.
+\end{itemize}
+
+\subsubsection{Integridade e Alucinação de Modelos de Linguagem}
+
+Modelos de linguagem são suscetíveis a "alucinações" — geração de conteúdo sintaticamente válido mas logicamente incorreto ou factualmente impreciso. No contexto de geração de regras Semgrep, uma alucinação pode resultar em regras que são válidas sintaticamente (passam validação YAML) mas não detectam corretamente as vulnerabilidades-alvo, criando falsos negativos que geram falsa sensação de segurança.
+
+\textbf{Controles de Mitigação:}
+\begin{itemize}
+    \item \textbf{Validação Humana Obrigatória (Human-in-the-Loop):} Todas as regras geradas por IA devem ser submetidas a revisão humana antes da implantação em ambientes de produção. A IA acelera o desenvolvimento, mas não substitui o julgamento de especialistas em segurança.
+    \item \textbf{Testes Automatizados contra Ground Truth:} Validação sistemática de regras geradas contra o dataset de validação com vulnerabilidades conhecidas, calculando métricas de precisão, recall e F1-score para identificar regras deficientes.
+    \item \textbf{Refinamento Iterativo:} Processo estruturado de refinamento onde regras geradas são testadas, avaliadas, e refinadas através de prompts ajustados com feedback, convergindo para regras de alta qualidade após 2-4 iterações típicas.
+    \item \textbf{Documentação de Limitações:} Transparência explícita sobre quais vulnerabilidades são cobertas e quais são limitações conhecidas, evitando over-trust na automação.
+\end{itemize}
+
+\subsubsection{Disponibilidade e Dependência de Serviços Externos}
+
+A dependência de APIs de IA externas (Anthropic, OpenAI) para geração de regras e execução de testes adversariais cria um ponto único de falha. Interrupções na disponibilidade destes serviços, limitações de taxa (rate limiting) ou custos operacionais elevados podem impactar a capacidade de desenvolver novas regras ou executar análises completas.
+
+\textbf{Controles de Mitigação:}
+\begin{itemize}
+    \item \textbf{Arquitetura Híbrida com Degradação Graciosa:} O motor principal de análise (Semgrep) opera completamente offline, não dependendo de serviços externos para detecção de vulnerabilidades. A IA é utilizada exclusivamente para aceleração de desenvolvimento (design-time), não bloqueando a execução de análises (run-time).
+    \item \textbf{Cache de Regras Geradas:} Armazenamento local de regras previamente geradas e validadas, permitindo reutilização sem necessidade de novas chamadas à API.
+    \item \textbf{Fallback para Desenvolvimento Manual:} Metodologia documentada para desenvolvimento manual de regras Semgrep quando APIs de IA não estão disponíveis, garantindo continuidade operacional.
+    \item \textbf{Monitoramento de Custos:} Implementação de limites de custo e alertas para prevenir gastos excessivos com APIs de IA em ambientes corporativos.
+\end{itemize}
+
+\subsubsection{Segurança da Cadeia de Suprimentos de IA}
+
+A confiança na robustez e segurança dos modelos de linguagem utilizados pelas APIs externas representa um risco de segurança da cadeia de suprimentos. Vulnerabilidades ou comportamentos inesperados nos modelos podem impactar a confiabilidade das análises, potencialmente produzindo falsos positivos ou, mais gravemente, falsos negativos que deixam vulnerabilidades reais não detectadas.
+
+\textbf{Controles de Mitigação:}
+\begin{itemize}
+    \item \textbf{Diversificação de Fornecedores:} Capacidade de alternar entre diferentes modelos de IA (Claude, GPT-4, modelos open-source) para reduzir dependência de um único fornecedor.
+    \item \textbf{Validação Independente:} Testes sistemáticos de regras geradas por diferentes modelos contra o mesmo dataset de validação, identificando discrepâncias que podem indicar problemas de qualidade.
+    \item \textbf{Auditoria de Comportamento:} Monitoramento de padrões de saída dos modelos para detectar degradação de qualidade ou mudanças de comportamento que possam indicar atualizações problemáticas nos modelos subjacentes.
+\end{itemize}
+
+\subsection{Considerações de Privacidade (LGPD)}
+
+A aplicação da metodologia LINDDUN (Linkability, Identifiability, Non-repudiation, Detectability, Disclosure, Unawareness, Non-compliance) fornece uma análise sistemática de riscos de privacidade, particularmente relevante no contexto brasileiro onde a Lei Geral de Proteção de Dados (LGPD) estabelece requisitos rigorosos de proteção de dados pessoais.
+
+\textbf{Linkability:} A capacidade de correlacionar múltiplas análises de workflows para identificar padrões de comportamento do usuário ou organização representa um risco de privacidade. Logs de execução que armazenam hashes de workflows podem, teoricamente, ser correlacionados para rastrear evolução de práticas de desenvolvimento ao longo do tempo.
+
+\textbf{Controle:} Minimização de dados nos logs, armazenando apenas metadados essenciais (timestamp, contagem de vulnerabilidades por tipo) sem identificadores que permitam correlação direta.
+
+\textbf{Identifiability:} Workflows podem conter dados pessoais (PII) como endereços de e-mail, números de telefone ou identificadores de clientes. A análise estática processa estes dados, potencialmente expondo-os em relatórios ou logs.
+
+\textbf{Controle:} Detecção automática de padrões de PII (expressões regulares para e-mails, CPF, telefones) e redação automática nos relatórios, substituindo por \texttt{[REDACTED]}.
+
+\textbf{Disclosure:} O vazamento não autorizado de dados pessoais através de relatórios compartilhados ou transmissão para APIs de IA externas viola requisitos da LGPD.
+
+\textbf{Controle:} Redação automática de PII antes de qualquer transmissão externa; preferência por análise local para workflows contendo dados pessoais; documentação explícita de medidas de proteção de dados.
+
+\textbf{Non-compliance:} A falta de conformidade com requisitos da LGPD pode resultar em penalidades regulatórias significativas (até 2\% do faturamento ou R\$ 50 milhões).
+
+\textbf{Controle:} Implementação de medidas técnicas e organizacionais documentadas (Art. 46 da LGPD), incluindo criptografia de dados em repouso, controle de acesso a logs e políticas de retenção de dados com prazo de expiração automática.
 
 \subsection{Considerações Éticas}
 
-\textit{[Discutir aspectos éticos do sistema.]}
-
-\subsubsection{Vieses Algorítmicos}
-
-\textit{[Identificar riscos de discriminação, estratégias de mitigação e métodos de avaliação de equidade.]}
+A utilização de inteligência artificial em ferramentas de segurança introduz considerações éticas que transcendem aspectos puramente técnicos, requerendo compromissos explícitos de transparência, equidade e responsabilidade.
 
 \subsubsection{Transparência e Explicabilidade}
 
-\textit{[Estabelecer compromissos de transparência e como a explicabilidade será implementada.]}
+A transparência refere-se à capacidade de usuários compreenderem como a ferramenta funciona, quais vulnerabilidades são detectadas e quais são limitações conhecidas. A explicabilidade é particularmente crítica quando IA é utilizada para geração de regras, pois usuários devem compreender a origem e confiabilidade das detecções.
+
+\textbf{Compromissos de Transparência:}
+\begin{itemize}
+    \item \textbf{Documentação Explícita de Cobertura:} Relatórios incluem mapeamento claro de quais classes de vulnerabilidades são cobertas pela abordagem híbrida e quais são limitações conhecidas (ex.: detecção de DoS requer análise complementar).
+    \item \textbf{Identificação de Origem de Detecções:} Cada vulnerabilidade detectada identifica explicitamente qual ferramenta (Agentic Radar ou Semgrep) realizou a detecção, permitindo que usuários compreendam a base técnica da análise.
+    \item \textbf{Metadados de Regras:} Regras Semgrep incluem metadados indicando se foram geradas por IA ou desenvolvidas manualmente, incluindo timestamp de criação e versão do modelo utilizado (quando aplicável).
+    \item \textbf{Limitações Documentadas:} Admissão explícita de que análise estática não pode detectar todas as vulnerabilidades, especialmente aquelas que dependem de contexto de execução ou lógica de negócio complexa.
+\end{itemize}
+
+\subsubsection{Equidade e Ausência de Vieses}
+
+Embora a ferramenta proposta não tome decisões que impactem diretamente indivíduos (não classifica pessoas, não determina acesso a recursos), a equidade manifesta-se através da consistência e imparcialidade da detecção de vulnerabilidades. Vieses podem surgir se regras geradas por IA favorecem certos padrões de código ou tipos de vulnerabilidades em detrimento de outros.
+
+\textbf{Estratégias de Mitigação:}
+\begin{itemize}
+    \item \textbf{Dataset Balanceado de Validação:} O conjunto de workflows de teste cobre todas as seis classes de vulnerabilidades de forma balanceada, garantindo que regras sejam avaliadas contra espectro completo de riscos.
+    \item \textbf{Validação Cruzada:} Testes de regras geradas por IA contra múltiplos workflows representativos, identificando padrões de detecção inconsistentes que podem indicar vieses.
+    \item \textbf{Revisão por Múltiplos Especialistas:} Validação humana de regras geradas por IA realizada por múltiplos analistas de segurança, reduzindo impacto de vieses individuais.
+\end{itemize}
+
+\subsubsection{Responsabilidade e Accountability}
+
+A responsabilidade refere-se à capacidade de identificar quem é responsável por decisões tomadas pela ferramenta e garantir que existam mecanismos de prestação de contas. Embora a ferramenta seja executada localmente pelo usuário, a responsabilidade pela interpretação de resultados e decisões de remediação permanece com o usuário.
+
+\textbf{Mecanismos de Accountability:}
+\begin{itemize}
+    \item \textbf{Rastreabilidade de Regras:} Todas as regras incluem metadados de autoria (gerada por IA com identificação do modelo, ou desenvolvida manualmente com identificação do autor), permitindo rastreabilidade completa.
+    \item \textbf{Versionamento de Conjuntos de Regras:} Controle de versão formal de conjuntos de regras através de Git, permitindo auditoria histórica de mudanças e rollback para versões anteriores se problemas forem identificados.
+    \item \textbf{Documentação de Decisões de Design:} Justificativa técnica documentada para escolhas arquiteturais (por que Agentic Radar + Semgrep, por que IA para geração de regras), permitindo avaliação crítica por pares.
+\end{itemize}
 
 \subsubsection{Direito de Contestação}
 
-\textit{[Definir processo para usuários contestarem decisões automatizadas.]}
+Embora a ferramenta não tome decisões automatizadas sobre indivíduos (não é um sistema de decisão automatizada conforme Art. 20 da LGPD), usuários devem ter capacidade de contestar detecções que considerem incorretas (falsos positivos) ou reportar vulnerabilidades não detectadas (falsos negativos).
+
+\textbf{Processo de Contestação:}
+\begin{itemize}
+    \item \textbf{Feedback de Falsos Positivos:} Mecanismo documentado para usuários reportarem detecções incorretas, permitindo refinamento iterativo de regras e redução de taxas de falsos positivos.
+    \item \textbf{Reporte de Falsos Negativos:} Processo para submissão de workflows com vulnerabilidades conhecidas não detectadas, permitindo identificação de lacunas de cobertura e desenvolvimento de regras adicionais.
+    \item \textbf{Revisão de Contestações:} Processo estruturado de revisão de contestações por especialistas em segurança, com documentação de decisões e atualização de regras quando apropriado.
+\end{itemize}
 
 
 % ==== Seção 7: Avaliação ====
