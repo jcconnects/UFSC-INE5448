@@ -120,571 +120,213 @@ A crescente adoção de plataformas Low-Code/No-Code (LCNC), como o n8n, tem tra
 \section{Introdução}
 \label{sec:introducao}
 
-A crescente adoção de plataformas Low-Code/No-Code (LCNC) representa uma transformação fundamental no desenvolvimento de aplicações e automações empresariais. O n8n, uma proeminente plataforma de automação de workflows de código aberto, exemplifica essa mudança ao capacitar equipes técnicas a conectar APIs, bancos de dados e serviços através de um editor visual intuitivo. Esta democratização do desenvolvimento, embora acelere drasticamente a criação de automações, introduz desafios críticos de segurança que este trabalho busca endereçar.
+A crescente adoção de plataformas Low-Code/No-Code (LCNC) representa uma transformação fundamental no desenvolvimento de automações empresariais. O n8n, plataforma de automação de workflows de código aberto, exemplifica essa mudança ao permitir que equipes conectem APIs, bancos de dados e serviços através de um editor visual. Esta democratização do desenvolvimento introduz desafios críticos de segurança: o "código-fonte" da aplicação (arquivo JSON do workflow) não está sujeito ao mesmo rigor de segurança que a plataforma na qual é executado.
 
-A mudança de um modelo de codificação imperativa tradicional para um modelo de configuração declarativa, onde a lógica é definida visualmente e armazenada como objetos JSON, introduz um novo paradigma para a segurança de aplicações. Existe uma lacuna crítica de governança: o "código-fonte" da aplicação (arquivo JSON do workflow) não está sujeito ao mesmo rigor de segurança que a plataforma na qual é executado. As equipes de segurança não podem mais depender exclusivamente das garantias de segurança do fornecedor; em vez disso, devem estabelecer seus próprios processos de garantia para os ativos criados na plataforma.
+\subsection{Motivação e Problema}
 
-\subsection{Motivação e Contexto}
+O interesse por este tema surge de uma necessidade prática: a plataforma n8n é utilizada diariamente em ambiente de trabalho, e muitos usuários que criam workflows não possuem conhecimento técnico em segurança, resultando no desenvolvimento não intencional de vulnerabilidades. A própria n8n implementa práticas de segurança robustas em seu código-fonte, mas essa varredura não se estende aos workflows criados pelos usuários.
 
-O interesse por este tema surge de uma necessidade prática identificada no ambiente de trabalho, onde a plataforma n8n é utilizada diariamente. Com o crescimento do número de workflows e a expansão do uso da ferramenta para diferentes áreas organizacionais, observou-se a necessidade crítica de averiguar a segurança dos workflows desenvolvidos. Particularmente preocupante é o fato de que muitos usuários que criam workflows não possuem conhecimento técnico aprofundado em segurança, o que pode resultar no desenvolvimento não intencional de vulnerabilidades dentro do sistema.
+No contexto brasileiro, a LGPD \cite{lgpd_lei} cria demanda específica por ferramentas que garantam conformidade e segurança de automações empresariais. Os workflows podem conter seis classes críticas de vulnerabilidades: \textbf{SQL Injection}, \textbf{Command/Code Injection}, \textbf{Secret Sprawl}, \textbf{SSRF}, \textbf{Insecure Data Handling} e \textbf{Denial of Service}. A natureza declarativa do JSON do n8n paradoxalmente facilita certos tipos de análise estática, declarando explicitamente relações de fluxo de dados através do array \texttt{connections}.
 
-Esta experiência prática evidencia a lacuna de governança identificada na literatura, onde o "desenvolvedor cidadão" assume responsabilidades de desenvolvimento sem o treinamento formal necessário para identificar riscos de segurança. A própria n8n implementa práticas de segurança robustas em seu código-fonte, incluindo a utilização de Testes de Segurança de Aplicações. Contudo, essa varredura não se estende, nem poderia se estender, aos workflows criados pelos seus usuários. A responsabilidade pela concepção de workflows seguros é explicitamente delegada ao usuário.
+\subsection{Escopo e Contribuições}
 
-O potencial de impacto no contexto brasileiro é particularmente significativo considerando a crescente digitalização de processos empresariais e a adoção de ferramentas de automação no país. A Lei Geral de Proteção de Dados (LGPD) \cite{lgpd_lei} e outras regulamentações de segurança cibernética criam uma demanda específica por ferramentas que possam garantir a conformidade e segurança de automações empresariais. Uma ferramenta SAST especializada para n8n junto com a rápida criação de regras novas, de acordo com a demanda, utilizando inteligência artificial, pode contribuir significativamente para elevar o nível de segurança das automações desenvolvidas por organizações brasileiras, reduzindo riscos de vazamento de dados e ataques cibernéticos que podem resultar em penalidades regulatórias e danos reputacionais.
+Este trabalho foca no desenvolvimento e validação de uma abordagem híbrida para análise estática de segurança de workflows n8n, incluindo: avaliação de Agentic Radar e Semgrep, detecção das seis classes de vulnerabilidades, e metodologia para criação de regras utilizando IA. Estão excluídos: implementação de ferramenta SAST de produção, interface gráfica, análise dinâmica e correção automática de vulnerabilidades.
 
-\subsection{Problema Abordado}
-
-O principal desafio de segurança no n8n não é uma falha da plataforma em si, mas sim uma falha potencial na implementação do "usuário-desenvolvedor". Os workflows podem conter seis classes críticas de vulnerabilidades: \textbf{SQL Injection (SQLi)}, onde entradas controladas pelo usuário são inseridas em consultas SQL sem sanitização adequada; \textbf{Command/Code Injection}, com dados não confiáveis usados em comandos executados no servidor; \textbf{Secret Sprawl \& Chaining}, envolvendo dispersão de segredos em configurações ou logs; \textbf{SSRF}, quando entradas do usuário determinam URLs em requisições HTTP sem validação; \textbf{Insecure Data Handling}, com falhas na proteção de dados sensíveis; e \textbf{Denial of Service (DoS)}, através de workflows suscetíveis a loops infinitos ou operações intensivas.
-
-A natureza declarativa do JSON do n8n, embora abstraia a complexidade do código tradicional, paradoxalmente torna certos tipos de análise estática mais fáceis e precisas. Ele declara explicitamente as relações de fluxo de dados através do array \texttt{connections}, permitindo regras de análise de contaminação (taint analysis) com elevado grau de confiança e baixa taxa de falsos positivos.
-
-\subsection{Delimitação do Escopo}
-
-Este trabalho foca especificamente no desenvolvimento e validação de uma abordagem híbrida para análise estática de segurança de workflows n8n. O escopo inclui análise estática de arquivos JSON de workflows, avaliação detalhada de duas ferramentas do estado da arte (Agentic Radar e Semgrep), detecção das seis classes principais de vulnerabilidades, desenvolvimento de metodologia para criação de regras Semgrep utilizando inteligência artificial, uso de workflows com vulnerabilidades conhecidas como dataset de validação, e análise de viabilidade técnica com métricas de performance.
-
-Estão excluídos do escopo: implementação completa de uma ferramenta SAST de produção, interface gráfica para usuários finais, análise dinâmica ou execução real de workflows, análise de nós customizados da comunidade, correção automática de vulnerabilidades, otimização de performance de workflows, deploy em ambientes de produção corporativos, e análise de vulnerabilidades em nível de infraestrutura da plataforma n8n.
-
-\subsection{Contribuições Esperadas}
-
-Este trabalho oferece contribuições técnicas, metodológicas e científicas para segurança em plataformas LCNC. Primeiro, apresenta uma \textbf{análise comparativa} sistemática de Agentic Radar e Semgrep, documentando coberturas complementares e aplicabilidade ao contexto n8n. Segundo, fornece \textbf{validação de viabilidade} através de demonstração empírica da eficácia da análise estática de estruturas JSON declarativas. Terceiro, propõe uma \textbf{abordagem híbrida} que combina ferramentas especializadas e genéricas configuráveis para maximizar cobertura. Quarto, desenvolve \textbf{metodologia com IA} utilizando inteligência artificial para acelerar a criação de regras de detecção. Quinto, inclui \textbf{documentação de lacunas} identificando limitações e oportunidades para pesquisas futuras.
-
-A relevância para a formação profissional está diretamente alinhada com as tendências emergentes do mercado de tecnologia. O desenvolvimento de competências em análise de segurança para plataformas LCNC representa uma especialização altamente demandada no mercado, posicionando o profissional na interseção entre desenvolvimento de baixo código e segurança cibernética. A capacidade de identificar e mitigar riscos em ambientes de desenvolvimento democratizado torna-se um diferencial competitivo crucial à medida que mais organizações adotam estratégias de desenvolvimento cidadão.
+As principais contribuições são:
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item \textbf{Análise comparativa} de Agentic Radar e Semgrep com coberturas complementares
+    \item \textbf{Validação de viabilidade} da análise estática de estruturas JSON declarativas
+    \item \textbf{Abordagem híbrida} combinando ferramentas especializadas e genéricas
+    \item \textbf{Metodologia com IA} para acelerar criação de regras de detecção
+    \item \textbf{Documentação de lacunas} e oportunidades para pesquisas futuras
+\end{itemize}
 
 % ==== Seção 2: Fundamentação Teórica ====
 \section{Fundamentação Teórica e Estado da Arte}
 \label{sec:fundamentacao}
 
-Esta seção apresenta a revisão da literatura relevante e análise crítica das ferramentas existentes para análise estática de segurança em plataformas Low-Code/No-Code, com foco específico na plataforma n8n. A análise concentra-se em duas ferramentas principais que representam abordagens distintas ao problema: o Agentic Radar, uma solução moderna baseada em agentes de IA, e o Semgrep, um motor de análise estática clássico e extensível.
+Esta seção apresenta a revisão da literatura e análise das ferramentas existentes para análise estática de segurança em plataformas LCNC, focando em duas ferramentas principais: Agentic Radar (solução baseada em agentes de IA) e Semgrep (motor de análise estática extensível). É crucial ressaltar que \textbf{não existe uma solução consolidada para detecção de vulnerabilidades especificamente em workflows do n8n}.
 
-\subsection{Técnicas de SAST para Plataformas Low-Code/No-Code}
+\subsection{Ferramentas de SAST para n8n}
 
-O cenário de ferramentas para análise de segurança estática de workflows n8n é emergente e fragmentado, apresentando abordagens distintas que podem ser categorizadas em ferramentas dedicadas e adaptáveis. É crucial ressaltar que, até o momento, \textbf{não existe uma abordagem oficial ou solução consolidada para detecção de vulnerabilidades especificamente em workflows do n8n}. Esta lacuna representa tanto um desafio quanto uma oportunidade significativa para pesquisa e desenvolvimento na área.
+\textbf{Agentic Radar} \cite{splxai_n8n_scanning}: Ferramenta de código aberto da SPLX AI para análise de segurança de workflows com agentes de IA. Implementa análise estática consciente do contexto, modo de teste com API OpenAI para testes adversariais \cite{splxai_medium_scanning}, e correlação com OWASP LLM Top 10. Foco em riscos de IA: injeção de prompt, vazamento de PII, geração de conteúdo nocivo. Cobertura limitada a aproximadamente 16,7\% das classes de vulnerabilidades tradicionais.
 
-\subsubsection{Abordagem Moderna: Agentic Radar e IA Agêntica}
+\textbf{Semgrep} \cite{semgrep_platform}: Motor de análise estática baseado em correspondência de padrões com AST, suportando 30+ linguagens incluindo JSON \cite{semgrep_custom_rules}. Permite desenvolvimento de regras customizadas em YAML para detectar padrões inseguros específicos. Capacidade de taint tracking para rastrear fluxo de dados contaminados \cite{prototype_pollution}. Cobertura potencial de 66,7\% das classes, dependendo do desenvolvimento de regras personalizadas.
 
-O Agentic Radar, desenvolvido pela SPLX AI, emerge como a ferramenta de código aberto mais proeminente especificamente projetada para análise de segurança de workflows em plataformas de automação, incluindo o n8n \cite{splxai_n8n_scanning}. A ferramenta representa uma abordagem moderna ao problema, incorporando capacidades de Inteligência Artificial Agêntica (Agentic AI) para análise de fluxos de trabalho onde agentes de IA interagem com ferramentas, APIs e serviços externos.
+\textbf{Limitação Crítica Identificada}: O modo JSON do Semgrep apresenta dificuldades com estruturas aninhadas (4+ níveis) como workflows n8n. A solução foi o \textbf{modo genérico}, que trata JSON como texto plano com correspondência via regex — menos sofisticado semanticamente, mas significativamente mais efetivo na prática (Seção \ref{sec:avaliacao}).
 
-A utilização de IA no Agentic Radar manifesta-se em múltiplas dimensões. Primeiro, a ferramenta implementa análise estática consciente do contexto, capaz de interpretar a estrutura JSON de workflows e construir representações gráficas dos fluxos de dados. Segundo, o modo de teste (\texttt{test}) utiliza modelos de linguagem (especificamente a API da OpenAI) para executar testes adversariais em tempo de execução, simulando ataques de injeção de prompt, tentativas de extração de informações sensíveis e geração de conteúdo prejudicial \cite{splxai_medium_scanning}. Esta capacidade de testar dinamicamente a robustez de sistemas de agentes de IA através de entradas adversariais geradas por outros modelos de linguagem representa uma aplicação sofisticada de IA para segurança.
+\subsection{Explicabilidade e Privacidade}
 
-Terceiro, a ferramenta correlaciona padrões identificados nos workflows com categorias de risco estabelecidas pelo OWASP LLM Top 10, sugerindo a utilização de classificação assistida por IA para mapeamento de vulnerabilidades. Quarto, a geração de relatórios com visualizações gráficas interativas e recomendações de remediação contextualizadas indica o uso de técnicas de geração de linguagem natural para produzir explicações técnicas compreensíveis.
+Ambas as ferramentas implementam mecanismos de explicabilidade: Agentic Radar gera relatórios HTML com visualizações gráficas e alinhamento ao OWASP LLM Top 10; Semgrep oferece transparência através de regras YAML legíveis com metadados de severidade e sugestões de correção \cite{owasp_source_code_analysis}.
 
-O foco atual do Agentic Radar concentra-se em riscos emergentes específicos de sistemas de agentes de IA: injeção de prompt, vazamento de PII, geração de conteúdo nocivo e disseminação de desinformação. Esta especialização não cobre vulnerabilidades tradicionais de aplicações web, limitando sua cobertura a aproximadamente 16,7\% das classes identificadas.
-
-\subsubsection{Abordagem Clássica: Semgrep e Análise Baseada em Padrões}
-
-O Semgrep, desenvolvido pela Semgrep Inc., representa uma abordagem clássica de análise estática de código, fundamentada em correspondência de padrões consciente de sintaxe \cite{semgrep_platform}. Diferentemente de ferramentas baseadas em expressões regulares, o Semgrep realiza parsing do código-fonte em árvores sintáticas abstratas (AST), oferecendo compreensão semântica da estrutura do código. A ferramenta suporta mais de 30 linguagens de programação, incluindo análise nativa de formatos estruturados como JSON e YAML, tornando-a particularmente relevante para a análise de workflows do n8n.
-
-A arquitetura do Semgrep fundamenta-se em uma linguagem de regras declarativa, onde padrões de detecção são especificados em arquivos YAML. Esta abordagem permite que equipes de segurança desenvolvam conjuntos de regras personalizados sem a complexidade de manipulação direta de ASTs ou construção de compiladores \cite{semgrep_custom_rules}. No contexto do n8n, regras podem ser desenvolvidas para detectar padrões inseguros específicos: concatenação de entradas não confiáveis em consultas SQL, construção dinâmica de URLs em nós HTTP Request baseada em dados externos, uso de expressões dinâmicas em comandos de execução e exposição de credenciais em configurações.
-
-A capacidade de análise de fluxo de dados (dataflow analysis) do Semgrep é particularmente relevante para a detecção de vulnerabilidades de injeção. A ferramenta permite configurar fontes de dados não confiáveis (sources) — como nós Webhook que recebem entradas externas — e destinos perigosos (sinks) — como parâmetros de consultas SQL ou comandos de execução. O motor de análise então rastreia automaticamente o fluxo de dados contaminados (taint tracking) desde as fontes até os sinks, sinalizando caminhos que não incluem validação ou sanitização adequada \cite{prototype_pollution}.
-
-A análise revela que o Semgrep oferece potencial de cobertura para aproximadamente 66,7\% das classes identificadas, mas esta capacidade é inteiramente potencial: depende do desenvolvimento de regras personalizadas. Até o momento, nenhum conjunto de regras específico para n8n existe no registro comunitário público.
-
-\textbf{Limitação Crítica Identificada: Modo JSON vs. Modo Genérico}
-
-Durante a fase experimental deste trabalho, identificou-se uma limitação fundamental do modo JSON do Semgrep quando aplicado a estruturas altamente aninhadas como workflows do n8n. O modo JSON, que realiza parsing da estrutura em árvores sintáticas abstratas (AST), apresenta dificuldades em aplicar padrões de detecção em arrays profundamente aninhados (4+ níveis de profundidade), como o array \texttt{nodes} dentro de workflows n8n.
-
-A solução identificada foi a utilização do \textbf{modo genérico} (generic mode) do Semgrep, que trata o arquivo JSON como texto plano e aplica correspondência baseada em expressões regulares. Esta abordagem, embora menos sofisticada semanticamente, demonstrou-se significativamente mais efetiva para detecção de padrões inseguros em workflows n8n, conforme será detalhado na Seção \ref{sec:avaliacao}.
-
-Esta descoberta tem implicações importantes para a análise de segurança de plataformas LCNC: ferramentas SAST tradicionais requerem adaptação cuidadosa ao paradigma declarativo de configuração-como-código, e a escolha do modo de análise apropriado é tão crítica quanto a seleção da ferramenta em si.
-
-A principal limitação é a ausência de conhecimento nativo do esquema n8n, exigindo investimento estimado entre 40 e 60 horas de trabalho especializado para desenvolver regras customizadas abrangentes.
-
-\subsection{Explicabilidade em Ferramentas de Análise de Segurança}
-
-A explicabilidade refere-se à capacidade de um sistema fornecer insights compreensíveis sobre seu funcionamento e decisões, sendo particularmente crítica em contextos de segurança onde a confiança nas detecções é essencial para a adoção prática das ferramentas \cite{owasp_source_code_analysis}. Tanto o Agentic Radar quanto o Semgrep implementam mecanismos de explicabilidade, embora através de abordagens distintas.
-
-O Agentic Radar gera relatórios em formato HTML com visualizações gráficas interativas dos fluxos de trabalho, identificação clara de vulnerabilidades e explicações técnicas detalhadas sobre por que determinado padrão foi classificado como risco. As recomendações de remediação são contextualizadas e acionáveis, frequentemente incluindo exemplos de código corrigido. O alinhamento explícito com o OWASP LLM Top 10 fornece uma taxonomia padronizada que facilita a comunicação de riscos com stakeholders não técnicos. A capacidade de visualização gráfica é particularmente valiosa para workflows complexos, permitindo que analistas de segurança compreendam o contexto das vulnerabilidades dentro do fluxo de dados completo.
-
-O Semgrep, por sua vez, oferece explicabilidade através da transparência das regras. Cada regra é especificada em YAML legível, onde o padrão de detecção, as condições lógicas e os metadados (severidade, mensagens explicativas, sugestões de correção) são explicitamente declarados. Esta transparência permite que desenvolvedores e analistas de segurança compreendam exatamente o que está sendo detectado e por quê. Os relatórios gerados incluem o padrão correspondido, a localização exata no código (número de linha) e a mensagem explicativa definida na regra. O suporte a metadados arbitrários permite enriquecer as detecções com mapeamentos a frameworks de segurança (OWASP LCNC Top 10, CWE), referências a documentação e exemplos de mitigação.
-
-A principal diferença está na natureza da explicabilidade: o Agentic Radar oferece explicações contextuais baseadas na análise holística do fluxo de trabalho, enquanto o Semgrep oferece explicações baseadas em regras que detalham por que um padrão específico é considerado inseguro. Ambas as abordagens são complementares e valiosas em diferentes contextos de uso.
-
-\subsection{Segurança e Privacidade em Sistemas de Análise Baseados em IA}
-
-A integração de Inteligência Artificial em ferramentas de análise de segurança introduz considerações específicas relacionadas à segurança e privacidade que devem ser cuidadosamente avaliadas, especialmente em contextos corporativos com requisitos rigorosos de conformidade regulatória \cite{n8n_privacy}.
-
-O Agentic Radar, particularmente em seu modo de teste dinâmico, depende da API da OpenAI para execução de testes adversariais. Esta dependência cria múltiplas preocupações. Primeiro, a necessidade de enviar workflows para serviços externos de terceiros levanta questões de privacidade e confidencialidade: workflows corporativos frequentemente contêm lógica de negócio proprietária, credenciais de acesso a sistemas internos e referências a infraestrutura sensível. A transmissão destes artefatos para serviços externos pode violar políticas de segurança organizacionais ou requisitos de conformidade como SOC 2, ISO 27001 ou a Lei Geral de Proteção de Dados (LGPD) \cite{lgpd_lei} no contexto brasileiro \cite{n8n_legal}.
-
-A dependência de serviços externos cria questões de disponibilidade e custo operacional. Interrupções na disponibilidade da API da OpenAI impactam diretamente a capacidade de executar análises de segurança, um cenário inaceitável para pipelines de CI/CD críticos onde feedback rápido é essencial. Os custos por chamada de API, embora individualmente pequenos, podem acumular-se significativamente em ambientes corporativos analisando centenas ou milhares de workflows regularmente.
-
-Também existe a preocupação de segurança da cadeia de suprimentos: a confiança na robustez e segurança dos modelos de linguagem utilizados pela API externa. Vulnerabilidades ou comportamentos inesperados nos modelos podem impactar a confiabilidade das análises, potencialmente produzindo falsos positivos ou, mais gravemente, falsos negativos que deixam vulnerabilidades reais não detectadas.
-
-O Semgrep, como ferramenta de análise estática tradicional, pode operar completamente offline e auto-hospedado, não requerendo transmissão de código para serviços externos. A versão open-source é inteiramente local, endereçando as preocupações de privacidade. No entanto, a plataforma Semgrep Cloud opcional, que oferece dashboards de equipe, agregação de resultados históricos e gerenciamento centralizado de políticas, requer envio de código-fonte para serviços externos operados pela Semgrep Inc. Para organizações com requisitos rigorosos de conformidade, esta limitação restringe o uso à versão auto-hospedada, que carece de algumas funcionalidades de colaboração da plataforma cloud \cite{gitlab_sast}.
-
-A oportunidade de utilizar IA para geração assistida de regras Semgrep, discutida na próxima subseção, deve ser implementada com consideração cuidadosa destes aspectos de privacidade. Modelos de linguagem podem ser utilizados para sugerir regras baseadas em descrições de vulnerabilidades ou exemplos de padrões inseguros, mas a geração deve, idealmente, ocorrer localmente ou através de modelos de IA auto-hospedados para evitar vazamento de conhecimento proprietário sobre padrões de vulnerabilidade específicos da organização.
+Quanto à privacidade \cite{n8n_privacy}: Agentic Radar (modo teste) depende de APIs externas (OpenAI), criando preocupações de confidencialidade e conformidade com LGPD \cite{lgpd_lei,n8n_legal}. Semgrep opera completamente offline na versão open-source \cite{gitlab_sast}.
 
 \subsection{Gaps e Oportunidades}
 
-A análise das ferramentas existentes e do estado da arte revela lacunas significativas e oportunidades promissoras para pesquisa e desenvolvimento na área de análise de segurança para workflows do n8n.
+\textbf{Gap Fundamental}: Não existe ferramenta dedicada à detecção de vulnerabilidades em workflows n8n \cite{owasp_lcnc_top10}. As soluções existentes oferecem cobertura parcial e complementar.
 
-\subsubsection{Gap Fundamental: Ausência de Solução Específica para n8n}
+\textbf{Oportunidade — IA para Geração de Regras}: Modelos de linguagem podem acelerar o desenvolvimento de regras Semgrep (estimativa manual: 40-60h) através de: geração a partir de descrições em linguagem natural, otimização para redução de falsos positivos, e manutenção automatizada. A implementação utiliza Claude 3.5 Sonnet com prompts especializados e few-shot learning.
 
-Conforme evidenciado pela análise anterior, \textbf{não existe atualmente uma ferramenta dedicada especificamente à detecção de vulnerabilidades em workflows do n8n}. As soluções existentes oferecem cobertura parcial e complementar, mas nenhuma aborda o problema de forma abrangente. Esta lacuna representa um risco substancial para organizações que dependem da plataforma para automações críticas.
-
-Esta lacuna é particularmente preocupante considerando a mudança de paradigma de segurança identificada na literatura: o workflow JSON não é meramente configuração, mas sim o código-fonte da aplicação, e deve ser submetido ao mesmo rigor de análise que código tradicional \cite{owasp_lcnc_top10}. A ausência de ferramentas adequadas resulta na perpetuação da lacuna de governança, onde workflows potencialmente inseguros são implantados em produção sem análise automatizada.
-
-\subsubsection{Oportunidade: IA para Geração Assistida de Regras Semgrep}
-
-Uma oportunidade promissora é a utilização de IA para geração assistida de regras Semgrep. O desenvolvimento manual representa uma barreira significativa (40-60 horas estimadas). Modelos de linguagem podem ser aplicados para quatro propósitos principais. Primeiro, a \textbf{geração de regras a partir de descrições em linguagem natural}, permitindo que analistas de segurança descrevam vulnerabilidades em linguagem natural e o modelo gere automaticamente a regra Semgrep correspondente em YAML com padrões sintáticos, condições lógicas e metadados apropriados. Segundo, a \textbf{otimização de regras existentes para redução de falsos positivos}, onde modelos de IA analisam regras com taxas elevadas de falsos positivos e sugerem refinamentos nas condições lógicas que distinguem padrões genuinamente inseguros de uso legítimo. Terceiro, o \textbf{aprendizado de padrões a partir de workflows reais}, através de análise de datasets de workflows usando técnicas de aprendizado não supervisionado para identificar clusters de padrões comuns, distinguindo práticas seguras de inseguras. Quarto, a \textbf{manutenção automatizada de regras}, onde modelos de IA analisam changelogs e documentação de API da plataforma n8n para sugerir atualizações nas regras existentes ou identificar necessidade de novas regras conforme a plataforma evolui.
-
-Esta abordagem híbrida — motor de análise clássico (Semgrep) potencializado por IA generativa para desenvolvimento de conhecimento de segurança — combina as forças de ambos os paradigmas: a confiabilidade, transparência e performance da análise estática baseada em padrões com a flexibilidade, capacidade de adaptação e eficiência de desenvolvimento proporcionadas por modelos de linguagem.
-
-A implementação desta abordagem utiliza prompts especializados e few-shot learning, fornecendo ao Claude 3.5 Sonnet exemplos de regras Semgrep existentes para outras plataformas e solicitando adaptação para o esquema JSON do n8n. A validação das regras geradas por IA através de testes automatizados em workflows é essencial para garantir confiabilidade antes da implantação em ambientes de produção.
-
-\subsubsection{Iniciativa Comunitária: n8n-CyberSecurity-Workflows}
-
-A comunidade de segurança cibernética tem reconhecido a importância de automação de segurança utilizando n8n. O repositório \texttt{n8n-CyberSecurity-Workflows} \cite{n8n_cybersecurity_workflows}, mantido pela comunidade CyberSecurityUP, documenta mais de 100 ideias de workflows para automação de segurança em Red Team, Blue Team, AppSec e DevSecOps.
-
-Relevante para este trabalho, o repositório menciona explicitamente a possibilidade de utilizar Semgrep para análise de segurança de workflows n8n em formato JSON, reconhecendo a lacuna de ferramentas especializadas. Esta iniciativa comunitária reforça a necessidade identificada neste trabalho e sugere demanda prática por soluções SAST dedicadas ao ecossistema n8n.
-
-\subsubsection{Oportunidade: Arquitetura Híbrida para Cobertura Completa}
-
-A análise comparativa sugere que uma arquitetura híbrida poderia alcançar cobertura próxima a 100\% das classes de vulnerabilidades. Esta estratégia maximiza as forças complementares: Agentic Radar oferece análise especializada em agentes de IA, enquanto Semgrep oferece motor flexível e poderoso para padrões customizados.
-
-A integração destas ferramentas em um pipeline unificado, com agregação de resultados, classificação por severidade e categoria OWASP LCNC Top 10, e geração de relatórios consolidados, representa uma oportunidade de pesquisa significativa para o desenvolvimento de uma solução SAST verdadeiramente abrangente para o ecossistema n8n.
+\textbf{Oportunidade — Arquitetura Híbrida}: Combinação de Agentic Radar (análise de agentes de IA) com Semgrep (padrões customizados) em pipeline unificado poderia alcançar cobertura próxima a 100\%. O repositório \texttt{n8n-CyberSecurity-Workflows} \cite{n8n_cybersecurity_workflows} reforça a demanda prática por soluções SAST dedicadas ao ecossistema n8n.
 
 % ==== Seção 3: Metodologia ====
 \section{Metodologia}
 \label{sec:metodologia}
 
-Esta seção descreve a abordagem metodológica adotada para o desenvolvimento e validação da ferramenta SAST proposta, detalhando o processo de análise das ferramentas existentes, a metodologia inovadora de geração de regras assistida por inteligência artificial e os procedimentos de validação empregados.
+A pesquisa adota metodologia exploratória e experimental fundamentada em três pilares: análise comparativa de ferramentas existentes, abordagem híbrida combinando ferramentas complementares, e uso de IA para aceleração do desenvolvimento de regras.
 
-\subsection{Abordagem Metodológica Geral}
+\subsection{Análise das Ferramentas}
 
-A pesquisa adota metodologia exploratória e experimental, fundamentada em três pilares: pesquisa exploratória através de análise comparativa de Agentic Radar e Semgrep documentando capacidades e limitações; abordagem híbrida combinando ferramentas complementares para maximizar cobertura; e IA para aceleração usando modelos de linguagem para geração assistida de regras e redução de overhead de desenvolvimento.
+As ferramentas foram avaliadas segundo: \textbf{cobertura} (capacidade de detectar as seis classes de vulnerabilidades), \textbf{performance} (tempo de execução), \textbf{facilidade de uso} (instalação e documentação), e \textbf{qualidade dos relatórios}.
 
-
-
-\subsection{Análise das Ferramentas Existentes}
-
-A análise comparativa das ferramentas do estado da arte seguiu um protocolo estruturado para garantir avaliação objetiva e sistemática das capacidades e limitações de cada solução.
-
-\subsubsection{Critérios de Avaliação}
-
-As ferramentas foram avaliadas segundo quatro critérios principais: \textbf{cobertura de vulnerabilidades} (capacidade de detectar as seis classes identificadas, classificada como ALTO, MÉDIO, BAIXO ou NENHUMA); \textbf{performance} (tempo de execução, throughput e escalabilidade); \textbf{facilidade de uso} (complexidade de instalação, documentação e interface); e \textbf{qualidade dos relatórios} (clareza, severidade, explicações e sugestões de remediação).
-
-\subsubsection{Processo de Análise}
-
-O processo de análise de cada ferramenta seguiu um protocolo sistemático estruturado em quatro etapas principais. Inicialmente, realizou-se a \textbf{instalação e configuração} das ferramentas Agentic Radar (via \texttt{pip install agentic-radar}) e Semgrep (via \texttt{pip install semgrep}) em ambiente Python 3.10+. \textcolor{red}{TODO: Revisar Durante esta etapa, foram documentadas todas as dependências, requisitos de configuração (como variáveis de ambiente) e possíveis incompatibilidades encontradas}, garantindo a reprodutibilidade do ambiente de testes.
-
-Na segunda etapa, conduziram-se \textbf{testes com workflows de exemplo}, executando cada ferramenta sobre um conjunto de workflows representativos que cobrem diferentes tipos de nós relevantes para segurança, incluindo Webhook, MySQL, HTTP Request, Execute Command e Code. Esta diversidade de nós permitiu avaliar a capacidade das ferramentas em diferentes contextos de vulnerabilidades.
-
-A terceira etapa consistiu na \textbf{análise de capacidades de detecção}, avaliando as seis classes de vulnerabilidades em três workflows de teste e verificando se cada ferramenta detecta os padrões inseguros implementados. Para cada detecção ou ausência de detecção, documentou-se sistematicamente se tratava-se de true positive, false positive, true negative ou false negative, permitindo análise quantitativa posterior.
-
-A etapa final envolveu a \textbf{documentação de cobertura e limitações}, realizando o mapeamento sistemático da cobertura de cada ferramenta para as seis classes de vulnerabilidades, identificando lacunas fundamentais (vulnerabilidades não cobertas) e documentando limitações técnicas, operacionais e de privacidade. Os resultados desta análise comparativa foram consolidados nas seções anteriores deste documento, fornecendo a base empírica para a proposta da abordagem híbrida.
+O processo de análise seguiu quatro etapas: (1) \textbf{Instalação} das ferramentas via pip em ambiente Python 3.10+; (2) \textbf{Testes} com workflows representativos cobrindo nós Webhook, MySQL, HTTP Request, Execute Command e Code; (3) \textbf{Avaliação} das detecções classificando cada resultado como TP, FP, TN ou FN; (4) \textbf{Documentação} do mapeamento de cobertura e limitações identificadas.
 
 \subsection{Geração de Regras Semgrep Assistida por IA}
 
-A metodologia de geração assistida de regras representa a contribuição metodológica mais inovadora deste trabalho, aplicando técnicas de inteligência artificial generativa para acelerar e sistematizar o desenvolvimento de conhecimento de segurança específico do domínio do n8n.
+A metodologia de geração assistida representa a contribuição metodológica mais inovadora, aplicando IA generativa para acelerar o desenvolvimento de regras específicas para n8n.
 
-\subsubsection{Preparação de Workflows de Teste}
+\textbf{Workflows de Teste}: Desenvolveram-se quatro workflows implementando deliberadamente as seis classes de vulnerabilidades (SQL Injection, Command Injection, SSRF, etc.), documentados como ground truth para validação.
 
-Desenvolveram-se três workflows de teste implementando deliberadamente as seis classes de vulnerabilidades em cenários realistas. Exemplos incluem SQL Injection (entrada de webhook passada diretamente para consulta MySQL), Command Injection (entrada usada em Execute Command) e SSRF (URL dinâmica sem validação).
+\textbf{Processo de Geração}: Utilizou-se Claude 3.5 Sonnet através de prompts estruturados contendo: \textit{Contexto} (esquema JSON do n8n), \textit{Objetivo} (vulnerabilidade a detectar) e \textit{Formato} (estrutura YAML com campos obrigatórios). O ciclo iterativo incluiu: geração inicial $\rightarrow$ teste em workflows $\rightarrow$ avaliação $\rightarrow$ refinamento com feedback $\rightarrow$ convergência. Tipicamente, 2-4 iterações por regra, reduzindo drasticamente o tempo de desenvolvimento.
 
-Os workflows foram documentados detalhadamente, especificando localização exata dos padrões inseguros, categorias OWASP e severidades. Esta documentação serve como ground truth para validação.
+\textbf{Validação}: Regras validadas através de execução em workflows de teste, ajuste manual para redução de falsos positivos, e documentação completa com mapeamento OWASP/CWE.
 
-\subsubsection{Metodologia de Geração de Regras com IA}
+\subsection{Métricas de Validação}
 
-A geração assistida segue processo iterativo estruturado. Primeiro, analisou-se o esquema JSON do n8n (arrays \texttt{nodes} e \texttt{connections}, sintaxe de expressões dinâmicas, tipos de nós críticos).
+A validação combina avaliação quantitativa e qualitativa. Cada detecção foi classificada como True Positive, False Positive, True Negative ou False Negative, calculando-se: Precisão ($P = \frac{TP}{TP + FP}$), Recall ($R = \frac{TP}{TP + FN}$), e F1-Score ($F_1 = 2 \cdot \frac{P \cdot R}{P + R}$).
 
-Com este conhecimento, utilizou-se Claude 3.5 Sonnet através de prompts estruturados em três componentes: \textit{Contexto} (esquema n8n), \textit{Objetivo} (vulnerabilidade a detectar) e \textit{Formato} (estrutura YAML com campos obrigatórios).
-
-\textbf{Exemplo de prompt estruturado:}
-
-\begin{quote}
-\textit{"Você é um especialista em segurança de aplicações e na ferramenta Semgrep. Crie uma regra Semgrep em formato YAML que detecta vulnerabilidades de SQL Injection em workflows do n8n.}
-
-\textit{Contexto: Workflows do n8n são arquivos JSON onde o array 'nodes' contém objetos representando etapas de processamento. Nós de banco de dados MySQL têm type='n8n-nodes-base.mysql' e o parâmetro 'parameters.query' contém a consulta SQL. Expressões dinâmicas usam sintaxe \{\{ \$json.campo \}\}.}
-
-\textit{Objetivo: Detectar quando o parâmetro 'query' de um nó MySQL contém expressões \{\{ ... \}\} que referenciam dados de entrada não confiáveis, indicando possível concatenação de strings em SQL sem sanitização adequada.}
-
-\textit{Formato: A regra deve incluir id, message explicativa, severity='ERROR', metadata com owasp\_lcnc='LCNC-SEC-06' e CWE, e padrões que identifiquem o JSON específico do n8n."}
-\end{quote}
-
-O processo seguiu ciclo iterativo: (1) Geração inicial, (2) Teste em workflows, (3) Avaliação de detecções, (4) Refinamento com feedback, (5) Convergência. Tipicamente, foram necessárias 2-4 iterações por regra, reduzindo drasticamente o tempo de desenvolvimento.
-
-\subsubsection{Validação das Regras Geradas}
-
-As regras geradas foram validadas rigorosamente: (1) Execução em workflows de teste com documentação sistemática, (2) Ajuste manual para redução de falsos positivos (padrões negativos e contextualizações), (3) Documentação completa incluindo descrição técnica, exemplos, mapeamento OWASP/CWE e sugestões de remediação.
-
-\subsection{Validação e Métricas}
-
-O processo de validação da abordagem proposta combina avaliação quantitativa (métricas de detecção) e qualitativa (cobertura de vulnerabilidades e utilidade prática).
-
-\subsubsection{Testes de Detecção}
-
-A validação quantitativa das capacidades de detecção seguiu um protocolo experimental rigorosamente estruturado para garantir resultados objetivos e reproduzíveis. Ambas as ferramentas — Agentic Radar e Semgrep com regras customizadas — foram executadas sobre os três workflows de teste, com documentação sistemática de todos os resultados obtidos. Esta documentação detalhada permite rastreabilidade completa e validação independente dos achados.
-
-Cada detecção ou ausência de detecção foi classificada utilizando a taxonomia padrão de sistemas de detecção: \textit{True Positive (TP)} para vulnerabilidades reais corretamente identificadas, \textit{False Positive (FP)} para detecções em código seguro (falsos alarmes), \textit{True Negative (TN)} para ausência correta de detecção em código seguro, e \textit{False Negative (FN)} para vulnerabilidades reais não detectadas.
-
-A partir desta classificação, calcularam-se as métricas padrão de avaliação de sistemas de detecção: Precisão $P = \frac{TP}{TP + FP}$ (proporção de detecções corretas), Recall $R = \frac{TP}{TP + FN}$ (proporção de vulnerabilidades encontradas), F1-Score $F_1 = 2 \cdot \frac{P \cdot R}{P + R}$ (média harmônica), e Taxa de Falsos Positivos $\frac{FP}{FP + TN}$.
-
-Estas métricas foram calculadas tanto por ferramenta individual quanto para a abordagem híbrida combinada, permitindo comparação objetiva das capacidades de detecção e demonstrando quantitativamente os benefícios da estratégia híbrida proposta.
-
-\subsubsection{Avaliação de Cobertura}
-
-A avaliação de cobertura verificou sistematicamente a capacidade da abordagem proposta de endereçar o espectro completo de vulnerabilidades identificadas na revisão da literatura. Para cada uma das seis classes de vulnerabilidades — SQL Injection, Command Injection, Secret Sprawl, SSRF, Insecure Data Handling e DoS — verificou-se se ao menos uma das ferramentas da abordagem híbrida oferece capacidade de detecção efetiva.
-
-A análise comparativa quantitativa revelou diferenças significativas na cobertura oferecida por cada ferramenta individualmente. O Agentic Radar isolado oferece cobertura de 16,7\% (1 de 6 classes), focando especificamente em riscos emergentes de agentes de IA. O Semgrep customizado isolado apresenta cobertura potencial de 66,7\% (4 de 6 classes com cobertura ALTO), endereçando vulnerabilidades tradicionais de aplicações web. A abordagem híbrida, combinando ambas as ferramentas, alcança cobertura próxima a 100\% através da complementaridade estratégica das capacidades de cada solução.
-
-Adicionalmente, documentaram-se as lacunas residuais, identificando categorias de vulnerabilidades que permanecem parcialmente cobertas ou requerem capacidades de análise além do escopo das ferramentas utilizadas. Um exemplo notável é a detecção de Negação de Serviço (DoS) através de análise completa de ciclos no grafo de execução, que requereria capacidades de análise de fluxo de controle mais sofisticadas do que as oferecidas pelas ferramentas atuais.
-
-Os resultados desta validação são apresentados detalhadamente na Seção~\ref{sec:avaliacao} (Avaliação Experimental), fornecendo evidência empírica robusta da viabilidade e efetividade da abordagem proposta para detecção de vulnerabilidades em workflows do n8n.
+A avaliação de cobertura verificou a capacidade de endereçar as seis classes de vulnerabilidades. Resultados preliminares: Agentic Radar isolado oferece 16,7\% de cobertura (riscos de IA), Semgrep customizado 66,7\% (vulnerabilidades tradicionais), abordagem híbrida próxima a 100\%. Resultados detalhados na Seção~\ref{sec:avaliacao}.
 
 % ==== Seção 4: Objetivos e Métricas ====
 \section{Objetivos e Métricas de Sucesso}
 \label{sec:objetivos}
 
-Esta seção estabelece os objetivos gerais e específicos do trabalho, definindo critérios quantitativos e qualitativos para avaliar o sucesso da validação da abordagem proposta. É importante ressaltar que o foco não é desenvolver uma ferramenta SAST completa de produção, mas sim validar a viabilidade técnica da abordagem híbrida e da metodologia de geração de regras assistida por inteligência artificial.
+O objetivo geral é validar a \textbf{viabilidade técnica} de uma abordagem híbrida de análise estática para workflows n8n, demonstrando que a combinação de Agentic Radar e Semgrep pode oferecer cobertura abrangente de vulnerabilidades em estruturas JSON declarativas.
 
-\subsection{Objetivo Geral}
+\textbf{Objetivos Específicos}: (OE1) Análise comparativa de cobertura e limitações; (OE2) Metodologia de geração de regras com Claude 3.5 Sonnet; (OE3) Desenvolvimento de regras customizadas para classes não cobertas; (OE4) Validação empírica com workflows de teste; (OE5) Documentação de lacunas e oportunidades.
 
-O objetivo geral é validar a \textbf{viabilidade técnica} de uma abordagem híbrida de análise estática para workflows n8n, demonstrando que a combinação de ferramentas especializadas (Agentic Radar) e genéricas configuráveis (Semgrep) pode oferecer cobertura abrangente de vulnerabilidades em estruturas JSON declarativas, estabelecendo base científica e metodologia reproduzível para análise de segurança em plataformas Low-Code/No-Code.
-
-\subsection{Objetivos Específicos}
-
-Os objetivos específicos são:
-
-\begin{enumerate}[label=\textbf{OE\arabic*:}, left=1.5em]
-    \item \textbf{Análise comparativa:} Avaliar cobertura de vulnerabilidades, limitações técnicas e aplicabilidade ao contexto n8n, produzindo métricas quantitativas e caracterização qualitativa.
-    \item \textbf{Metodologia com IA:} Criar abordagem sistemática para geração de regras Semgrep usando Claude 3.5 Sonnet, incluindo estruturação de prompts e processo iterativo de refinamento.
-    \item \textbf{Regras customizadas:} Desenvolver regras para classes não cobertas pelo Agentic Radar, incluindo padrões, condições lógicas, metadados e mensagens explicativas.
-    \item \textbf{Validação empírica:} Executar ferramentas em workflows de teste, documentar detecções e calcular métricas de cobertura híbrida.
-    \item \textbf{Documentação de lacunas:} Identificar limitações, classes parcialmente cobertas e oportunidades para pesquisa futura.
-\end{enumerate}
-
-\subsection{Métricas de Avaliação}
-
-A avaliação do sucesso do trabalho será realizada através de critérios objetivos quantitativos e critérios qualitativos que, em conjunto, permitem caracterizar a viabilidade e utilidade da abordagem proposta.
-
-\subsubsection{Métricas Quantitativas}
-
-As métricas quantitativas estabelecem valores-alvo objetivos para aspectos mensuráveis do trabalho, permitindo avaliação empírica do alcance dos objetivos estabelecidos.
+\subsection{Métricas e Benchmarks}
 
 \begin{table}[H]
 \centering \small
-\caption{Métricas quantitativas e valores-alvo}
-\label{tab:metricas-quantitativas}
-\begin{tabular}{@{}p{4.5cm}p{5.5cm}p{2.5cm}@{}}
+\caption{Métricas quantitativas, benchmarks e metas}
+\label{tab:metricas-benchmarks}
+\begin{tabular}{@{}p{4cm}p{3.5cm}p{5.5cm}@{}}
 \toprule
-\textbf{Métrica} & \textbf{Definição} & \textbf{Meta} \\ \midrule
-\textbf{Cobertura de Vulnerabilidades (Híbrida)} & Percentual das 6 classes de vulnerabilidades com detecção efetiva através da abordagem híbrida (Agentic Radar + Semgrep) & $\geq$ 80\% \\[0.3cm]
-\textbf{Cobertura Agentic Radar} & Percentual das 6 classes adequadamente cobertas pelo Agentic Radar isoladamente & Documentar \% real \\[0.3cm]
-\textbf{Cobertura Semgrep} & Percentual das 6 classes cobertas por regras Semgrep customizadas & Documentar \% real \\[0.3cm]
-\textbf{Regras Desenvolvidas} & Número de regras Semgrep funcionais criadas utilizando metodologia assistida por IA & $\geq$ 4 regras (uma por classe não coberta) \\[0.3cm]
-\textbf{Redução de Tempo} & Economia de tempo no desenvolvimento de regras com IA vs. estimativa de desenvolvimento manual (8-12h por regra) & Documentar economia em horas \\
+\textbf{Métrica} & \textbf{Meta} & \textbf{Observações} \\ \midrule
+Cobertura Híbrida & $\geq$ 80\% (5-6/6 classes) & Combinação Agentic Radar + Semgrep \\
+Cobertura Agentic Radar & $\sim$16,7\% (1/6) & Baseline: apenas riscos de IA \\
+Cobertura Semgrep & $\sim$66,7\% (4/6) & Requer regras customizadas \\
+Regras Desenvolvidas & $\geq$ 4 regras & Uma por classe não coberta \\
+Redução de Tempo (IA) & $\geq$ 75\% economia & vs. estimativa manual (8-12h/regra) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A cobertura de vulnerabilidades é calculada como proporção de classes com detecção efetiva. A meta de 80\% reconhece que algumas categorias podem requerer capacidades além do escopo das ferramentas.
-
-A redução de tempo compara desenvolvimento com IA versus estimativa manual (8-12h por regra), validando quantitativamente o valor da geração assistida.
-
-\subsubsection{Métricas Qualitativas}
-
-As métricas qualitativas avaliam aspectos não diretamente quantificáveis, mas essenciais para caracterizar a viabilidade prática e utilidade da abordagem proposta. Cada métrica é avaliada através de critérios específicos de aceitação.
-
-\textbf{Viabilidade Técnica:} A validação fundamental do trabalho é demonstrar que a análise estática de workflows n8n é tecnicamente viável e efetiva. Os critérios avaliam se a análise estática de arquivos JSON permite identificação de padrões inseguros com precisão suficiente para ambientes reais, se as regras Semgrep geradas por IA são funcionais e detectam corretamente as vulnerabilidades-alvo, se a abordagem híbrida fecha as lacunas de cobertura oferecendo cobertura complementar efetiva, e se as limitações são documentadas de forma clara permitindo avaliação realista da aplicabilidade.
-
-\textbf{Usabilidade:} Embora o foco não seja desenvolver uma ferramenta de produção completa, a viabilidade prática requer que as ferramentas sejam razoavelmente acessíveis. Avalia-se se a instalação e configuração é viável com complexidade aceitável (máximo de 5 comandos por ferramenta), se a documentação permite reprodução independente do estudo, e se a execução das análises é direta sem requerer expertise profunda em detalhes de implementação.
-
-\textbf{Clareza de Resultados:} A utilidade prática das detecções depende da qualidade da comunicação dos resultados. Verifica-se se os relatórios identificam claramente as vulnerabilidades com localização exata no workflow, se existe mapeamento explícito para categorias do OWASP LCNC Top 10 facilitando comunicação com stakeholders, se as explicações técnicas são compreensíveis com sugestões de remediação acionáveis, e se a documentação distingue claramente entre detecções confirmadas e potenciais falsos positivos.
-
-\subsection{Benchmarks Comparativos}
-
-A avaliação da contribuição da abordagem híbrida requer comparação sistemática com três cenários baseline, cada um representando uma estratégia alternativa de análise de segurança para workflows n8n. A Tabela \ref{tab:benchmarks} sintetiza as coberturas esperadas para cada cenário.
-
-\begin{table}[H]
-\centering
-\caption{Benchmarks comparativos de cobertura de vulnerabilidades}
-\label{tab:benchmarks}
-\begin{tabular}{@{}p{4cm}p{3cm}p{6.5cm}@{}}
-\toprule
-\textbf{Cenário} & \textbf{Cobertura Esperada} & \textbf{Observações} \\ \midrule
-\textbf{Agentic Radar isolado} & $\sim$16,7\% (1/6 classes) & Baseline 1: Ferramenta especializada com foco em riscos emergentes de agentes de IA (injeção de prompt, vazamento de PII, geração de conteúdo prejudicial). Não cobre vulnerabilidades tradicionais de aplicações web. \\[0.5cm]
-\textbf{Semgrep isolado} & $\sim$66,7\% (4/6 classes) & Baseline 2: Potencial teórico para vulnerabilidades tradicionais (SQL Injection, Command Injection, SSRF, Secret Sprawl), mas requer desenvolvimento completo de regras customizadas. Sem regras, cobertura é 0\%. \\[0.5cm]
-\textbf{Abordagem Híbrida} & $\sim$83-100\% (5-6/6 classes) & Proposta: Combinação complementar de Agentic Radar (riscos de IA) + Semgrep customizado (vulnerabilidades tradicionais). Maximiza cobertura ao combinar forças de ambas as ferramentas. \\ \bottomrule
-\end{tabular}
-\end{table}
-
-O cenário \textbf{Agentic Radar isolado} (~16,7\%) demonstra que ferramentas especializadas são insuficientes como solução autônoma, estabelecendo o limite inferior.
-
-O cenário \textbf{Semgrep isolado} (~66,7\% potencial) evidencia a barreira crítica: sem regras customizadas, a cobertura é zero, estabelecendo o limite superior para ferramentas tradicionais.
-
-A \textbf{Abordagem Híbrida} visa superar ambas limitações através de estratégia complementar, com meta de 83-100\% de cobertura.
-
-A validação envolverá execução dos três cenários sobre workflows de teste, permitindo comparação direta.
+\textbf{Métricas Qualitativas}: Viabilidade técnica (análise JSON efetiva, regras funcionais), usabilidade (instalação simples, documentação reproduzível), e clareza de resultados (localização exata, mapeamento OWASP, sugestões acionáveis).
 
 \subsection{Critérios de Sucesso}
 
-O trabalho será considerado bem-sucedido se cinco critérios forem satisfeitos: \textbf{viabilidade técnica} (ambas ferramentas analisam workflows n8n e detectam ao menos uma vulnerabilidade cada), \textbf{IA validada} (Claude 3.5 Sonnet gera regras funcionais em tempo médio inferior a 2h por regra com economia de 75\% vs. manual), \textbf{cobertura complementar} (abordagem híbrida cobre mínimo de 80\% das classes), \textbf{lacunas documentadas} (limitações claramente identificadas e tecnicamente justificadas com oportunidades específicas para trabalhos futuros), e \textbf{reprodutibilidade} (metodologia documentada com detalhes suficientes para replicação independente). A satisfação destes critérios estabelece que a abordagem híbrida é viável e representa contribuição significativa para segurança de plataformas LCNC.
+O trabalho será bem-sucedido se: (1) ambas ferramentas detectam ao menos uma vulnerabilidade cada; (2) IA gera regras funcionais em $<$2h/regra; (3) abordagem híbrida cobre $\geq$80\% das classes; (4) limitações documentadas com justificativa técnica; (5) metodologia reproduzível independentemente.
 
 % ==== Seção 5: Escopo da Solução ====
 \section{Escopo da Solução e Requisitos}
 \label{sec:escopo}
 
-Esta seção detalha o escopo da solução proposta, definindo claramente os casos de uso cobertos, a arquitetura do sistema, os requisitos técnicos e a composição dos dados de validação. O foco é estabelecer expectativas realistas sobre o que será entregue no contexto de validação de viabilidade técnica, distinguindo explicitamente entre funcionalidades incluídas e excluídas do escopo.
+\subsection{Casos de Uso e Exclusões}
 
-\subsection{Casos de Uso}
+\textbf{Caso de Uso Principal}: Desenvolvedor/Analista de Segurança fornece arquivo JSON do workflow exportado do n8n $\rightarrow$ Sistema executa análise híbrida (Agentic Radar para riscos de IA + Semgrep para vulnerabilidades tradicionais) $\rightarrow$ Usuário analisa resultados de cada ferramenta separadamente $\rightarrow$ Vulnerabilidades documentadas com localização específica e recomendações de remediação. Suporta também análise em lote de múltiplos workflows.
 
-Os casos de uso definem as interações principais entre os usuários e o sistema, estabelecendo o escopo funcional da solução proposta. O foco está na análise estática de segurança de workflows individuais e em lote, reconhecendo que este é um projeto de validação de viabilidade técnica, não uma ferramenta de produção completa.
+\textbf{Exclusões do Escopo}: Análise dinâmica/execução real de workflows, interface gráfica, correção automática, análise de nós customizados da comunidade, otimização de performance, integração CI/CD com bloqueio automático, e visualização gráfica de fluxos.
 
-\subsubsection{Caso de Uso Principal: Análise de Segurança de Workflow n8n}
+\subsection{Arquitetura e Componentes}
 
-O cenário principal de uso representa o fluxo típico de análise de segurança executado por um desenvolvedor ou analista de segurança que deseja avaliar a postura de segurança de um workflow específico do n8n.
+A arquitetura híbrida combina duas camadas: (1) \textbf{Entrada e Validação} — parser JSON com validação de estrutura (arrays \texttt{nodes} e \texttt{connections}), extração de metadados e suporte a análise em lote; (2) \textbf{Motor de Análise Híbrida} — execução sequencial/paralela do Agentic Radar (\texttt{scan} mode, cobertura ~16,7\%) e Semgrep com regras customizadas (cobertura ~66,7\%).
 
-\textbf{Ator primário:} Desenvolvedor ou Analista de Segurança \\
-
-\textbf{Pré-condições:} O workflow do n8n foi exportado em formato JSON através da interface da plataforma, as ferramentas de análise (Agentic Radar e Semgrep) estão instaladas e configuradas no ambiente, o conjunto de regras customizadas do Semgrep está disponível e atualizado, e o ambiente possui conectividade de rede (caso o Agentic Radar utilize o modo \texttt{test} que requer API da OpenAI).
-
-\textbf{Fluxo principal:}
-\begin{enumerate}
-    \item O usuário fornece o arquivo JSON do workflow como entrada para o sistema de análise
-    \item O sistema executa a análise híbrida, invocando sequencialmente:
-    \begin{itemize}
-        \item Agentic Radar em modo \texttt{scan} para detecção de riscos de IA agêntica
-        \item Semgrep com conjunto de regras customizadas para vulnerabilidades tradicionais
-    \end{itemize}
-    \item Cada ferramenta produz sua saída independente: o Agentic Radar gera relatório em formato HTML ou JSON, e o Semgrep gera saída em formato JSON
-    \item O usuário analisa os resultados de cada ferramenta separadamente, revisando as vulnerabilidades detectadas, suas localizações no workflow e as explicações técnicas fornecidas por cada ferramenta
-    \item O usuário correlaciona manualmente as detecções de ambas as ferramentas quando necessário, identificando sobreposições e priorizando correções baseando-se na severidade e natureza das vulnerabilidades
-\end{enumerate}
-
-\textbf{Fluxos alternativos:} Na \textbf{análise em lote}, o usuário fornece um diretório contendo múltiplos arquivos JSON de workflows, o sistema itera sobre todos os arquivos executando a análise híbrida em cada um, e cada ferramenta produz suas saídas individuais para todos os workflows processados.
-
-\textbf{Pós-condições:} Ao final da análise, as saídas de ambas as ferramentas estão disponíveis para revisão, vulnerabilidades detectadas por cada ferramenta estão documentadas com localização específica no workflow (identificador do nó e parâmetro afetado), e recomendações de remediação específicas de cada ferramenta estão disponíveis.
-
-\subsubsection{Casos Excluídos do Escopo}
-
-Para manter o foco na validação de viabilidade técnica da abordagem híbrida e da metodologia de geração de regras assistida por IA, os seguintes casos de uso são explicitamente excluídos do escopo deste trabalho. O sistema não executará \textbf{análise dinâmica ou execução real de workflows}, operando puramente sobre a estrutura JSON declarativa. Não será desenvolvida \textbf{interface gráfica} web ou desktop, sendo a interação via linha de comando adequada para usuários técnicos e integração em pipelines automatizados. O sistema identifica e reporta vulnerabilidades mas não oferece \textbf{correção automática}, permanecendo a remediação como responsabilidade do desenvolvedor. O foco está nos nós oficiais da base do n8n, excluindo \textbf{análise de nós customizados da comunidade}. O sistema não avalia \textbf{otimização de performance} de workflows, focando exclusivamente em vulnerabilidades de segurança. A configuração e implantação de \textbf{integração em pipelines CI/CD com bloqueio automático} estão fora do escopo, embora o Semgrep possua integrações nativas. Por fim, não será desenvolvida \textbf{visualização gráfica de fluxos de trabalho}, pois embora o Agentic Radar possua esta capacidade, sua replicação não é essencial para validar a viabilidade da detecção de vulnerabilidades.
-
-\subsection{Arquitetura Proposta}
-
-A arquitetura do sistema fundamenta-se em uma abordagem híbrida que combina as forças complementares do Agentic Radar e do Semgrep para alcançar cobertura abrangente das seis classes de vulnerabilidades identificadas. O design privilegia modularidade, permitindo que cada ferramenta opere independentemente e produza suas saídas de forma autônoma.
-
-\subsubsection{Visão Geral da Arquitetura em Camadas}
-
-A arquitetura é organizada em duas camadas principais que representam o fluxo de processamento desde a entrada de dados até a execução das análises. A \textbf{Camada de Entrada de Dados} é responsável pela leitura e validação de arquivos JSON de workflows verificando conformidade com o esquema esperado do n8n. A \textbf{Camada de Motores de Análise} executa as ferramentas de detecção de vulnerabilidades em paralelo ou sequencialmente, invocando o Agentic Radar e o Semgrep sobre os workflows de entrada, produzindo resultados independentes que são analisados separadamente.
-
-Esta arquitetura em camadas promove separação de responsabilidades, facilitando testes unitários de cada componente e permitindo substituição ou atualização de ferramentas individuais sem impacto no sistema completo.
-
-\subsubsection{Componentes Principais}
-
-A implementação da arquitetura proposta requer dois componentes principais, cada um com responsabilidades claramente definidas:
-
-\textbf{A. Módulo de Entrada e Validação}
-
-Este componente é responsável pela interface entre o usuário e o sistema de análise. Suas funções incluem parser JSON robusto que lê arquivos de workflow e valida a estrutura contra o esquema esperado (presença dos arrays \texttt{nodes} e \texttt{connections}, estrutura de objetos de nó), extração de metadados do workflow (nome, versão, contagem de nós, tipos de nós presentes), tratamento de erros para arquivos malformados ou inválidos gerando mensagens informativas para o usuário, e suporte a análise em lote iterando sobre diretórios de workflows e mantendo associação entre arquivos e resultados.
-
-A validação estrutural neste estágio previne falhas nas ferramentas de análise downstream e fornece feedback rápido sobre problemas de formato.
-
-\textbf{B. Motor de Análise Híbrida}
-
-Este componente orquestra a execução das duas ferramentas de análise, gerenciando suas invocações e capturando suas saídas. Consiste em dois submódulos: o \textbf{Executor do Agentic Radar} invoca o comando \texttt{agentic-radar scan} sobre o arquivo JSON do workflow, captura a saída (tipicamente em formato HTML ou JSON estruturado), e extrai as vulnerabilidades relacionadas a riscos de IA agêntica, sendo responsável pela cobertura de aproximadamente 16,7\% das classes de vulnerabilidades focando em injeção de prompt, vazamento de PII através de respostas de modelos de linguagem e geração de conteúdo prejudicial. O \textbf{Executor do Semgrep} invoca o comando \texttt{semgrep --config=rules/ --json} sobre o arquivo JSON do workflow utilizando o conjunto de regras customizadas desenvolvidas especificamente para o esquema do n8n, captura a saída em formato JSON estruturado (SARIF ou formato nativo do Semgrep) e extrai as vulnerabilidades relacionadas a SQL Injection, Command Injection, SSRF, Secret Sprawl, Insecure Data Handling e DoS, sendo responsável pela cobertura potencial de aproximadamente 66,7\% das classes de vulnerabilidades.
-
-A execução pode ser paralela (para maximizar velocidade) ou sequencial (para simplificar tratamento de erros), dependendo das restrições de recursos do ambiente.
-
-\subsection{Requisitos Técnicos}
-
-Os requisitos técnicos especificam as tecnologias, frameworks e infraestrutura necessários para implementação e execução da solução proposta.
-
-\subsubsection{Tecnologias e Frameworks}
-
-A seleção de tecnologias priorizou maturidade, compatibilidade com as ferramentas de análise e acessibilidade para a comunidade de segurança. A Tabela \ref{tab:stack} sintetiza o stack tecnológico.
+\subsection{Stack Tecnológico e Infraestrutura}
 
 \begin{table}[H]
 \centering \small
-\caption{Stack tecnológico da solução proposta}
+\caption{Stack tecnológico e requisitos de infraestrutura}
 \label{tab:stack}
-\begin{tabular}{@{}llp{7.5cm}@{}}
+\begin{tabular}{@{}lp{10cm}@{}}
 \toprule
-\textbf{Camada} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \midrule
-Análise IA Agentes & Agentic Radar & Única ferramenta open-source especializada em riscos de IA agêntica para workflows de automação, com suporte comprovado para n8n \\[0.3cm]
-Análise Tradicional & Semgrep & Motor SAST maduro e amplamente adotado, com suporte nativo a JSON, linguagem de regras acessível e capacidades de taint analysis \\[0.3cm]
-Linguagem Principal & Python 3.10+ & Compatibilidade com ambas as ferramentas (Agentic Radar requer Python >= 3.10 < 3.13), ecossistema rico de bibliotecas para processamento JSON e geração de relatórios \\[0.3cm]
-Processamento JSON & Python \texttt{json} & Biblioteca padrão para parsing e manipulação de workflows, sem dependências externas \\[0.3cm]
-Geração de Regras & Claude 3.5 Sonnet (API Anthropic) & Modelo de linguagem de grande capacidade para geração assistida de regras Semgrep, acelerando desenvolvimento através de prompts estruturados e few-shot learning \\
+\textbf{Componente} & \textbf{Especificação} \\ \midrule
+Análise IA & Agentic Radar (única ferramenta open-source para riscos de IA agêntica em n8n) \\
+Análise Tradicional & Semgrep (motor SAST maduro, suporte nativo a JSON, taint analysis) \\
+Linguagem & Python 3.10-3.12 (compatibilidade com Agentic Radar) \\
+Geração de Regras & Claude 3.5 Sonnet (API Anthropic) \\
+\midrule
+Infraestrutura & CPU 2 cores, 4GB RAM, 2GB armazenamento, Linux/macOS/Windows \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A escolha do Python como linguagem principal é justificada pela necessidade de compatibilidade com as ferramentas de análise e pela disponibilidade de bibliotecas robustas para as tarefas requeridas. A utilização de Claude 3.5 Sonnet para geração de regras representa uma inovação metodológica, reduzindo drasticamente o tempo de desenvolvimento de regras customizadas de 8-12 horas por regra para aproximadamente 2 horas, conforme será demonstrado na validação experimental.
+\subsection{Dataset de Validação}
 
-\subsubsection{Infraestrutura Mínima}
-
-Os requisitos de infraestrutura são modestos, refletindo a natureza de análise estática da solução que não requer recursos computacionais intensivos como GPUs ou grandes quantidades de memória.
-
-\textbf{Ambiente de Desenvolvimento:} Requer CPU com 2 cores (análise estática não requer processamento intensivo), 4GB de RAM (suficiente para parsing de workflows típicos de até 100 nós), 2GB de armazenamento (instalação de ferramentas, regras customizadas e workflows de teste), Python versão 3.10, 3.11 ou 3.12 (compatibilidade com Agentic Radar), e sistema operacional Linux, macOS ou Windows (ferramentas são multiplataforma).
-
-\textbf{Ambiente de Execução:} Utiliza ambiente local ou containerizado (Docker) para portabilidade, capacidade de execução paralela opcional para análise em lote de múltiplos workflows, e conectividade de rede caso o modo \texttt{test} do Agentic Radar seja utilizado (requer acesso à API da OpenAI).
-
-A infraestrutura mínima garante que a solução possa ser executada em laptops de desenvolvimento típicos, sem necessidade de servidores dedicados ou infraestrutura cloud, reduzindo barreiras de adoção e custos operacionais.
-
-\subsubsection{Dados de Validação}
-
-A validação da abordagem proposta requer um dataset controlado de workflows com vulnerabilidades conhecidas, servindo como ground truth para avaliar precisão, recall e taxa de falsos positivos das ferramentas.
-
-\textbf{Composição do Dataset:}
-
-O dataset de validação consiste em \textbf{3 workflows sintéticos} desenvolvidos especificamente para este trabalho, cada um implementando deliberadamente 2 das 6 classes de vulnerabilidades identificadas. Esta abordagem garante cobertura balanceada de todas as categorias e permite validação controlada onde a localização exata e a natureza de cada vulnerabilidade são conhecidas a priori.
-
-A Tabela \ref{tab:dataset} detalha a composição do dataset de validação.
+Dataset de 4 workflows com vulnerabilidades conhecidas (ground truth):
 
 \begin{table}[H]
 \centering \small
-\caption{Composição do dataset de workflows de validação}
+\caption{Composição do dataset de validação}
 \label{tab:dataset}
-\begin{tabular}{@{}p{2.5cm}p{5cm}p{5cm}@{}}
+\begin{tabular}{@{}p{2cm}p{4cm}p{6.5cm}@{}}
 \toprule
-\textbf{Workflow} & \textbf{Vulnerabilidades Implementadas} & \textbf{Nós e Padrões Envolvidos} \\ \midrule
-\textbf{Workflow 1:} Integração de Dados & SQL Injection + SSRF & Nó Webhook recebendo entrada externa → Nó MySQL com query dinâmica sem sanitização; Nó HTTP Request com URL construída dinamicamente \\[0.4cm]
-\textbf{Workflow 2:} Automação de Sistema & Command Injection + Secret Sprawl & Nó Webhook → Nó Execute Command com parâmetro \texttt{command} contendo expressão dinâmica; Credenciais hardcoded em parâmetros de configuração \\[0.4cm]
-\textbf{Workflow 3:} Processamento de Dados Sensíveis & Insecure Data Handling + DoS & Nó HTTP Request usando \texttt{http://} sem TLS para transmissão de dados; Estrutura de loop sem condição de saída clara no grafo de conexões \\[0.4cm]
-\textbf{Workflow 4:} Análise de Pull Requests com IA & Prompt Injection + Sensitive Information Disclosure & Nó GitHub Webhook → 2 AI Agents (Gemini 2.5 Flash/Pro) com dados não sanitizados em prompts; Issues Jira e diffs de código enviados para API externa do Google Vertex AI \\ \bottomrule
+\textbf{Workflow} & \textbf{Vulnerabilidades} & \textbf{Padrões} \\ \midrule
+WF1 & SQL Injection + SSRF & Webhook $\rightarrow$ MySQL query dinâmica; HTTP Request com URL dinâmica \\
+WF2 & Command Inj. + Secrets & Webhook $\rightarrow$ Execute Command; Credenciais hardcoded \\
+WF3 & Insecure Data + DoS & HTTP sem TLS; Loop sem condição de saída \\
+WF4 (IA) & Prompt Inj. + PII & GitHub $\rightarrow$ 2 AI Agents (Gemini); dados não sanitizados para API externa \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Documentação de Ground Truth:}
-
-Cada workflow no dataset é acompanhado de documentação detalhada especificando \textbf{localização exata} (identificador do nó afetado, nome do parâmetro contendo a vulnerabilidade, linha no arquivo JSON), \textbf{categoria OWASP} (mapeamento para a categoria relevante do OWASP LCNC Top 10), \textbf{severidade esperada} (classificação da severidade baseada no potencial de impacto e exploração), \textbf{descrição técnica} (explicação de como a vulnerabilidade se manifesta no workflow específico e por que é insegura), e \textbf{mitigação sugerida} (exemplo de correção que remediaria a vulnerabilidade).
-
-Esta documentação serve como baseline para cálculo de métricas de validação: uma detecção é considerada True Positive se a ferramenta identifica corretamente a vulnerabilidade na localização documentada e com classificação de severidade compatível (variação de ±1 nível é aceitável). A ausência de detecção de uma vulnerabilidade documentada constitui False Negative, enquanto detecções em código seguro (inexistentes neste dataset sintético) constituiriam False Positives.
-
-\textbf{Considerações de Privacidade:}
-
-Os workflows utilizados neste trabalho contêm dados reais extraídos de ambientes de produção, incluindo lógica de negócio, URLs, credenciais e configurações autênticas. Em conformidade com requisitos de privacidade e proteção de dados sensíveis, o dataset \textbf{não será compartilhado publicamente}. Todas as credenciais e informações identificáveis foram anonimizadas ou removidas dos exemplos apresentados neste documento. Esta abordagem permite análise realista de vulnerabilidades em contextos operacionais autênticos, respeitando rigorosamente as normas de confidencialidade e conformidade regulatória.
+Cada vulnerabilidade documentada com: localização exata (nó, parâmetro, linha), categoria OWASP, severidade, descrição técnica e mitigação sugerida. Detecção correta = True Positive; ausência = False Negative. Workflows contêm dados reais anonimizados (dataset não compartilhado publicamente por conformidade com privacidade).
 
 % ==== Seção 6: Threat Model ====
 \section{Ameaças, Riscos e Controles}
 \label{sec:threat-model}
 
-Esta seção aplica metodologias estruturadas de análise de segurança para identificar sistematicamente as ameaças, avaliar riscos e estabelecer controles de mitigação para a ferramenta SAST proposta. A análise fundamenta-se no modelo STRIDE (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege) para categorização de ameaças, complementada por considerações específicas sobre o uso de inteligência artificial e requisitos de privacidade conforme a LGPD.
+Esta seção aplica o modelo STRIDE para categorização de ameaças e estabelece controles de mitigação, complementada por considerações sobre IA e LGPD.
 
 \subsection{Superfícies de Ataque}
 
-A identificação das superfícies de ataque é fundamental para compreender os pontos de entrada e dependências que podem ser explorados por atacantes. A arquitetura híbrida proposta, combinando Agentic Radar e Semgrep com geração assistida de regras utilizando IA, apresenta quatro superfícies de ataque principais:
-
-\textbf{1. Entrada de Dados (Workflows JSON):} A ferramenta processa arquivos JSON de workflows do n8n fornecidos pelo usuário. Estes arquivos podem ser malformados intencionalmente, contendo estruturas profundamente aninhadas projetadas para explorar vulnerabilidades no parser JSON, ou podem conter payloads maliciosos embutidos em expressões dinâmicas que tentam enganar os motores de análise.
-
-\textbf{2. Integrações com APIs de IA Externas:} A metodologia de geração assistida de regras depende da API da Anthropic (Claude 3.5 Sonnet) para criação de regras Semgrep, enquanto o Agentic Radar, quando utilizado no modo \texttt{test}, requer comunicação com a API da OpenAI para execução de testes adversariais. Estas dependências externas introduzem riscos de privacidade, disponibilidade e integridade.
-
-\textbf{3. Base de Conhecimento (Regras e Configurações):} O conjunto de regras Semgrep customizadas, armazenadas em arquivos YAML, constitui a base de conhecimento de segurança da ferramenta. A adulteração destas regras pode resultar em cegueira intencional a vulnerabilidades específicas, comprometendo a efetividade da análise.
-
-\textbf{4. Ambiente de Execução Local:} A ferramenta é executada localmente através de interface de linha de comando (CLI), processando workflows no ambiente do usuário. Vulnerabilidades em bibliotecas dependentes (parser JSON, motor Semgrep, Agentic Radar) ou configurações inseguras do ambiente podem ser exploradas para execução de código arbitrário.
+A arquitetura híbrida apresenta quatro superfícies principais: (1) \textbf{Entrada de Dados} — workflows JSON malformados ou com payloads maliciosos; (2) \textbf{APIs de IA Externas} — dependências de Anthropic/OpenAI introduzem riscos de privacidade e disponibilidade; (3) \textbf{Base de Conhecimento} — adulteração de regras Semgrep pode criar cegueira a vulnerabilidades; (4) \textbf{Ambiente Local} — vulnerabilidades em dependências podem permitir execução de código.
 
 \subsection{Análise STRIDE}
 
-A aplicação sistemática do modelo STRIDE permite categorizar ameaças de segurança e estabelecer controles de mitigação correspondentes. A Tabela \ref{tab:stride} apresenta a matriz completa de ameaças identificadas para a ferramenta SAST proposta.
-
 \begin{table}[H]
-\centering
-\small
-\caption{Matriz de ameaças STRIDE para a ferramenta SAST}
+\centering \small
+\caption{Matriz de ameaças STRIDE}
 \label{tab:stride}
-\begin{tabular}{@{}p{2cm}p{4.5cm}p{5cm}@{}}
+\begin{tabular}{@{}p{1.8cm}p{4.5cm}p{5.5cm}@{}}
 \toprule
 \textbf{Categoria} & \textbf{Ameaça} & \textbf{Controle} \\ \midrule
-\textbf{Spoofing} & Falsificação de identidade de workflows ou adulteração de metadados para mascarar origem maliciosa & Validação de assinatura digital de workflows (quando disponível) e verificação de integridade de arquivos JSON através de hash SHA-256 antes do processamento \\[0.3cm]
-\textbf{Tampering} & Modificação maliciosa das regras Semgrep locais para criar cegueira intencional a vulnerabilidades específicas & Controle de versão das regras através de Git, verificação de integridade (hash) antes da execução, e assinatura digital das regras oficiais \\[0.3cm]
-\textbf{Repudiation} & Ausência de registros auditáveis sobre execuções da ferramenta, impedindo rastreabilidade de análises realizadas & Geração de logs estruturados (formato JSON) contendo timestamp, hash do workflow analisado, versão das regras utilizadas e resumo de detecções, armazenados localmente com proteção de integridade \\[0.3cm]
-\textbf{Information Disclosure} & Vazamento de credenciais hardcoded em workflows através de relatórios de segurança ou logs; transmissão de lógica de negócio proprietária para APIs de IA externas & Redação automática de padrões de segredos (chaves de API, tokens) nos relatórios; anonimização de dados antes do envio para APIs de IA; preferência por análise local (Semgrep) para workflows contendo informações sensíveis \\[0.3cm]
-\textbf{Denial of Service} & Submissão de "JSON Bombs" (arquivos com aninhamento profundo ou estruturas recursivas) projetados para estourar memória do parser ou travar o motor de análise & Validação de limites de recursos: profundidade máxima de aninhamento JSON (32 níveis), tamanho máximo de arquivo (10MB), timeout de análise (60 segundos), e monitoramento de uso de memória durante o parsing \\[0.3cm]
-\textbf{Elevation of Privilege} & Exploração de vulnerabilidades em bibliotecas dependentes (parser JSON, motor Semgrep) ou execução de código JavaScript embutido em expressões dinâmicas do n8n durante análise & Execução em ambiente isolado (sandbox) quando disponível; validação rigorosa de entrada antes do parsing; uso de versões atualizadas e auditadas de dependências; desabilitação de execução de código JavaScript durante análise estática \\
+Spoofing & Falsificação de workflows & Hash SHA-256 e assinatura digital \\
+Tampering & Adulteração de regras Semgrep & Git, verificação de hash, assinatura de regras \\
+Repudiation & Ausência de logs auditáveis & Logs JSON com timestamp, hash e versão \\
+Info. Disclosure & Vazamento de credenciais/dados & Redação automática (\texttt{[REDACTED]}), anonimização \\
+DoS & JSON Bombs & Limites: 32 níveis, 10MB, timeout 60s \\
+Elevation & Exploração de dependências & Sandbox, validação de entrada, deps atualizadas \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsubsection{Análise Detalhada por Categoria}
+\subsection{Riscos de Sistemas com IA}
 
-\textbf{Spoofing:} O risco de falsificação é relativamente baixo em execução local, onde o usuário possui controle direto sobre os arquivos analisados. No entanto, em cenários onde workflows são compartilhados entre equipes ou obtidos de fontes externas, existe o risco de adulteração de metadados (nome do workflow, versão) para mascarar a origem maliciosa. A implementação de verificação de integridade através de hash SHA-256 permite detectar modificações não autorizadas, enquanto assinaturas digitais (quando disponíveis) fornecem garantias de autenticidade.
+\textbf{Privacidade}: APIs externas recebem dados sensíveis $\rightarrow$ Controles: anonimização proativa, política de retenção zero, preferência por modelos auto-hospedados.
 
-\textbf{Tampering:} A adulteração das regras Semgrep representa uma ameaça crítica, pois pode resultar em cegueira intencional a vulnerabilidades específicas, criando uma falsa sensação de segurança. O controle de versão através de Git permite rastreabilidade completa de modificações, enquanto verificação de hash antes da execução detecta adulterações não autorizadas. Para ambientes de produção, recomenda-se assinatura digital das regras oficiais utilizando chaves criptográficas gerenciadas centralmente.
+\textbf{Alucinação}: Regras sintaticamente válidas mas ineficazes $\rightarrow$ Controles: validação humana obrigatória (human-in-the-loop), testes contra ground truth, refinamento iterativo (2-4 iterações).
 
-\textbf{Repudiation:} A ausência de registros auditáveis impede a rastreabilidade de análises realizadas, dificultando investigações de segurança e conformidade regulatória. A geração de logs estruturados em formato JSON, contendo timestamp, hash do workflow, versão das regras e resumo de detecções, estabelece um registro imutável de todas as execuções. A proteção de integridade dos logs através de hash ou assinatura digital previne adulteração posterior.
+\textbf{Disponibilidade}: Dependência de APIs externas $\rightarrow$ Controles: Semgrep opera offline, IA apenas em design-time, cache de regras geradas, fallback manual.
 
-\textbf{Information Disclosure:} Esta categoria apresenta riscos críticos devido à natureza sensível dos dados processados. Workflows podem conter credenciais hardcoded (chaves de API, tokens de acesso, senhas), lógica de negócio proprietária e referências a infraestrutura interna. A redação automática de padrões de segredos nos relatórios (substituição por \texttt{[REDACTED]}) previne vazamento acidental através de compartilhamento de relatórios. A anonimização de dados antes do envio para APIs de IA (remoção de identificadores, substituição de valores por placeholders) protege propriedade intelectual. Para workflows altamente sensíveis, recomenda-se desabilitar completamente o uso de APIs externas, utilizando apenas análise local do Semgrep.
+\textbf{Cadeia de Suprimentos}: Comportamento inesperado de modelos $\rightarrow$ Controles: diversificação de fornecedores, validação independente, auditoria de comportamento.
 
-\textbf{Denial of Service:} Ataques de negação de serviço podem ser executados através de arquivos JSON malformados projetados para explorar vulnerabilidades no parser ou consumir recursos computacionais excessivos. "JSON Bombs" com aninhamento profundo podem causar estouro de pilha (stack overflow) em parsers recursivos, enquanto estruturas recursivas podem resultar em loops infinitos durante a análise. A implementação de limites rigorosos de recursos (profundidade máxima, tamanho de arquivo, timeout) e monitoramento de uso de memória previne estes ataques, garantindo que a ferramenta falhe graciosamente sem comprometer a estabilidade do sistema.
+\subsection{Privacidade (LGPD) e Ética}
 
-\textbf{Elevation of Privilege:} A exploração de vulnerabilidades em bibliotecas dependentes ou execução de código JavaScript embutido em expressões dinâmicas do n8n durante análise estática representa um risco significativo. Embora a análise estática não deva executar código, parsers mal implementados podem inadvertidamente processar expressões de forma insegura. A execução em ambiente isolado (sandbox), quando disponível, limita o impacto de explorações. A validação rigorosa de entrada antes do parsing e o uso de versões atualizadas e auditadas de dependências reduzem a superfície de ataque.
+\textbf{LGPD} \cite{lgpd_lei}: Workflows podem conter PII. Controles: minimização de dados em logs, detecção automática de PII com redação, preferência por análise local, medidas técnicas documentadas (Art. 46 \cite{lgpd_art46}). Penalidades por não-conformidade: até 2\% do faturamento ou R\$ 50 milhões.
 
-\subsection{Riscos Específicos de Sistemas Baseados em IA}
-
-A integração de inteligência artificial na ferramenta proposta, através da geração assistida de regras utilizando Claude 3.5 Sonnet e do Agentic Radar que utiliza modelos de linguagem para análise, introduz categorias específicas de riscos que transcendem vulnerabilidades tradicionais de software.
-
-\subsubsection{Privacidade e Confidencialidade de Dados}
-
-O envio de descrições de vulnerabilidades, exemplos de código ou trechos de workflows para APIs de IA externas (Anthropic, OpenAI) cria riscos significativos de vazamento de propriedade intelectual e lógica de negócio proprietária. Workflows corporativos frequentemente contêm referências a sistemas internos, padrões de integração específicos da organização e estruturas de dados que revelam informações estratégicas.
-
-\textbf{Controles de Mitigação:} Implementa-se \textbf{anonimização proativa} removendo identificadores únicos antes do envio para APIs externas e substituindo por placeholders genéricos, \textbf{política de retenção zero} preferindo modelos de IA que garantem que dados não sejam utilizados para treinamento de modelos futuros, \textbf{modelos auto-hospedados} para organizações com requisitos rigorosos de conformidade eliminando completamente a transmissão de dados para serviços externos, e \textbf{segmentação de dados} limitando o escopo de dados enviados para APIs transmitindo apenas trechos mínimos necessários evitando envio de workflows completos.
-
-\subsubsection{Integridade e Alucinação de Modelos de Linguagem}
-
-Modelos de linguagem são suscetíveis a "alucinações" — geração de conteúdo sintaticamente válido mas logicamente incorreto ou factualmente impreciso. No contexto de geração de regras Semgrep, uma alucinação pode resultar em regras que são válidas sintaticamente (passam validação YAML) mas não detectam corretamente as vulnerabilidades-alvo, criando falsos negativos que geram falsa sensação de segurança.
-
-\textbf{Controles de Mitigação:} Implementa-se \textbf{validação humana obrigatória (human-in-the-loop)} onde todas as regras geradas por IA são submetidas a revisão humana antes da implantação em produção, \textbf{testes automatizados contra ground truth} validando sistematicamente regras geradas contra o dataset de validação com cálculo de métricas de precisão, recall e F1-score para identificar regras deficientes, \textbf{refinamento iterativo} através de processo estruturado onde regras são testadas, avaliadas e refinadas com prompts ajustados convergindo para alta qualidade após 2-4 iterações típicas, e \textbf{documentação de limitações} com transparência explícita sobre vulnerabilidades cobertas e limitações conhecidas evitando over-trust na automação.
-
-\subsubsection{Disponibilidade e Dependência de Serviços Externos}
-
-A dependência de APIs de IA externas (Anthropic, OpenAI) para geração de regras e execução de testes adversariais cria um ponto único de falha. Interrupções na disponibilidade destes serviços, limitações de taxa (rate limiting) ou custos operacionais elevados podem impactar a capacidade de desenvolver novas regras ou executar análises completas.
-
-\textbf{Controles de Mitigação:} Implementa-se \textbf{arquitetura híbrida com degradação graciosa} onde o motor principal de análise (Semgrep) opera completamente offline não dependendo de serviços externos para detecção de vulnerabilidades com IA utilizada exclusivamente para aceleração de desenvolvimento (design-time) não bloqueando execução de análises (run-time), \textbf{cache de regras geradas} com armazenamento local de regras previamente geradas e validadas permitindo reutilização sem novas chamadas à API, \textbf{fallback para desenvolvimento manual} com metodologia documentada para desenvolvimento manual de regras Semgrep quando APIs de IA não estão disponíveis garantindo continuidade operacional, e \textbf{monitoramento de custos} com implementação de limites de custo e alertas para prevenir gastos excessivos com APIs de IA.
-
-\subsubsection{Segurança da Cadeia de Suprimentos de IA}
-
-A confiança na robustez e segurança dos modelos de linguagem utilizados pelas APIs externas representa um risco de segurança da cadeia de suprimentos. Vulnerabilidades ou comportamentos inesperados nos modelos podem impactar a confiabilidade das análises, potencialmente produzindo falsos positivos ou, mais gravemente, falsos negativos que deixam vulnerabilidades reais não detectadas.
-
-\textbf{Controles de Mitigação:} Implementa-se \textbf{diversificação de fornecedores} com capacidade de alternar entre diferentes modelos de IA (Claude, GPT-4, modelos open-source) para reduzir dependência de um único fornecedor, \textbf{validação independente} através de testes sistemáticos de regras geradas por diferentes modelos contra o mesmo dataset de validação identificando discrepâncias que podem indicar problemas de qualidade, e \textbf{auditoria de comportamento} com monitoramento de padrões de saída dos modelos para detectar degradação de qualidade ou mudanças de comportamento que possam indicar atualizações problemáticas nos modelos subjacentes.
-
-\subsection{Considerações de Privacidade (LGPD)}
-
-A aplicação da metodologia LINDDUN (Linkability, Identifiability, Non-repudiation, Detectability, Disclosure, Unawareness, Non-compliance) fornece uma análise sistemática de riscos de privacidade, particularmente relevante no contexto brasileiro onde a Lei Geral de Proteção de Dados (LGPD) \cite{lgpd_lei} estabelece requisitos rigorosos de proteção de dados pessoais.
-
-\textbf{Linkability:} A capacidade de correlacionar múltiplas análises de workflows para identificar padrões de comportamento do usuário ou organização representa um risco de privacidade. Logs de execução que armazenam hashes de workflows podem, teoricamente, ser correlacionados para rastrear evolução de práticas de desenvolvimento ao longo do tempo.
-
-\textbf{Controle:} Minimização de dados nos logs, armazenando apenas metadados essenciais (timestamp, contagem de vulnerabilidades por tipo) sem identificadores que permitam correlação direta.
-
-\textbf{Identifiability:} Workflows podem conter dados pessoais (PII) como endereços de e-mail, números de telefone ou identificadores de clientes. A análise estática processa estes dados, potencialmente expondo-os em relatórios ou logs.
-
-\textbf{Controle:} Detecção automática de padrões de PII (expressões regulares para e-mails, CPF, telefones) e redação automática nos relatórios, substituindo por \texttt{[REDACTED]}.
-
-\textbf{Disclosure:} O vazamento não autorizado de dados pessoais através de relatórios compartilhados ou transmissão para APIs de IA externas viola requisitos da LGPD \cite{lgpd_lei}.
-
-\textbf{Controle:} Redação automática de PII antes de qualquer transmissão externa; preferência por análise local para workflows contendo dados pessoais; documentação explícita de medidas de proteção de dados.
-
-\textbf{Non-compliance:} A falta de conformidade com requisitos da LGPD \cite{lgpd_lei} pode resultar em penalidades regulatórias significativas (até 2\% do faturamento ou R\$ 50 milhões).
-
-\textbf{Controle:} Implementação de medidas técnicas e organizacionais documentadas (Art. 46 da LGPD \cite{lgpd_art46}), incluindo criptografia de dados em repouso, controle de acesso a logs e políticas de retenção de dados com prazo de expiração automática.
-
-\subsection{Considerações Éticas}
-
-A utilização de inteligência artificial em ferramentas de segurança introduz considerações éticas que transcendem aspectos puramente técnicos, requerendo compromissos explícitos de transparência, equidade e responsabilidade.
-
-\subsubsection{Transparência e Explicabilidade}
-
-A transparência refere-se à capacidade de usuários compreenderem como a ferramenta funciona, quais vulnerabilidades são detectadas e quais são limitações conhecidas. A explicabilidade é particularmente crítica quando IA é utilizada para geração de regras, pois usuários devem compreender a origem e confiabilidade das detecções.
-
-\textbf{Compromissos de Transparência:} Implementa-se \textbf{documentação explícita de cobertura} onde relatórios incluem mapeamento claro de quais classes de vulnerabilidades são cobertas pela abordagem híbrida e quais são limitações conhecidas, \textbf{identificação de origem de detecções} onde cada vulnerabilidade detectada identifica explicitamente qual ferramenta realizou a detecção permitindo que usuários compreendam a base técnica da análise, \textbf{metadados de regras} incluindo indicação se foram geradas por IA ou desenvolvidas manualmente com timestamp de criação e versão do modelo utilizado quando aplicável, e \textbf{limitações documentadas} com admissão explícita de que análise estática não pode detectar todas as vulnerabilidades especialmente aquelas que dependem de contexto de execução ou lógica de negócio complexa.
-
-\subsubsection{Equidade e Ausência de Vieses}
-
-Embora a ferramenta proposta não tome decisões que impactem diretamente indivíduos (não classifica pessoas, não determina acesso a recursos), a equidade manifesta-se através da consistência e imparcialidade da detecção de vulnerabilidades. Vieses podem surgir se regras geradas por IA favorecem certos padrões de código ou tipos de vulnerabilidades em detrimento de outros.
-
-\textbf{Estratégias de Mitigação:} Implementa-se \textbf{dataset balanceado de validação} onde o conjunto de workflows de teste cobre todas as seis classes de vulnerabilidades de forma balanceada garantindo que regras sejam avaliadas contra espectro completo de riscos, \textbf{validação cruzada} com testes de regras geradas por IA contra múltiplos workflows representativos identificando padrões de detecção inconsistentes que podem indicar vieses, e \textbf{revisão por múltiplos especialistas} onde validação humana de regras geradas por IA é realizada por múltiplos analistas de segurança reduzindo impacto de vieses individuais.
-
-\subsubsection{Responsabilidade e Accountability}
-
-A responsabilidade refere-se à capacidade de identificar quem é responsável por decisões tomadas pela ferramenta e garantir que existam mecanismos de prestação de contas. Embora a ferramenta seja executada localmente pelo usuário, a responsabilidade pela interpretação de resultados e decisões de remediação permanece com o usuário.
-
-\textbf{Mecanismos de Accountability:} Implementa-se \textbf{rastreabilidade de regras} onde todas as regras incluem metadados de autoria (gerada por IA com identificação do modelo, ou desenvolvida manualmente com identificação do autor) permitindo rastreabilidade completa, \textbf{versionamento de conjuntos de regras} através de controle de versão formal via Git permitindo auditoria histórica de mudanças e rollback para versões anteriores se problemas forem identificados, e \textbf{documentação de decisões de design} com justificativa técnica documentada para escolhas arquiteturais permitindo avaliação crítica por pares.
-
-\subsubsection{Direito de Contestação}
-
-Embora a ferramenta não tome decisões automatizadas sobre indivíduos (não é um sistema de decisão automatizada conforme Art. 20 da LGPD \cite{lgpd_art20}), usuários devem ter capacidade de contestar detecções que considerem incorretas (falsos positivos) ou reportar vulnerabilidades não detectadas (falsos negativos).
-
-\textbf{Processo de Contestação:} Implementa-se \textbf{feedback de falsos positivos} através de mecanismo documentado para usuários reportarem detecções incorretas permitindo refinamento iterativo de regras e redução de taxas de falsos positivos, \textbf{reporte de falsos negativos} com processo para submissão de workflows com vulnerabilidades conhecidas não detectadas permitindo identificação de lacunas de cobertura e desenvolvimento de regras adicionais, e \textbf{revisão de contestações} através de processo estruturado de revisão por especialistas em segurança com documentação de decisões e atualização de regras quando apropriado.
+\textbf{Considerações Éticas}: Transparência através de documentação explícita de cobertura e limitações; identificação da origem das detecções (ferramenta, regra gerada por IA vs. manual); dataset balanceado para evitar vieses; rastreabilidade completa de regras via Git; processo documentado para contestação de falsos positivos/negativos.
 
 
 % ==== Seção 7: Avaliação ====
@@ -720,332 +362,82 @@ workflow\_4.json & 14 & 552 & 4 (estimado) & Prompt Inj., PII & \textbf{Sim (2)}
 \end{tabular}
 \end{table}
 
-\subsection{Resultados}
+\subsection{Resultados do Semgrep}
 
-A avaliação experimental revelou diferenças dramáticas entre os dois modos de análise do Semgrep, documentando limitações arquiteturais fundamentais do modo JSON para estruturas LCNC.
+A avaliação revelou diferenças dramáticas entre os dois modos de análise do Semgrep.
 
-\subsubsection{Fase 1: Modo JSON (Falha Completa)}
+\textbf{Fase 1 — Modo JSON (Falha Completa)}: Desenvolvidas 33 regras com IA (3,75h). Execução: sem erros, 2,3s/workflow. \textbf{Detecções: Zero}. Causa raiz: parser JSON falha em arrays aninhados 4+ níveis (estrutura típica n8n: root $\rightarrow$ nodes $\rightarrow$ node $\rightarrow$ parameters). Operador \texttt{...} e \texttt{metavariable-regex} não funcionam como esperado em modo JSON.
 
-A tentativa inicial utilizou o modo JSON nativo do Semgrep, desenvolvendo 33 regras customizadas com assistência de IA (Claude 3.5 Sonnet) em 3,75 horas. As regras foram sintaticamente válidas e seguiam as convenções do Semgrep, cobrindo 7 classes de vulnerabilidades.
-
-\textbf{Execução}: Semgrep executou sem erros em todos os workflows (tempo médio: 2,3s por workflow, memória: $\sim$55MB).
-
-\textbf{Detecções}: Zero. Nenhuma das 14 vulnerabilidades documentadas foi detectada.
-
-A Tabela \ref{tab:json-mode-results} apresenta os resultados detalhados.
+\textbf{Fase 2 — Modo Genérico (Breakthrough)}: Pivô para modo genérico (JSON como texto plano + regex). Desenvolvidas 7 regras (1,2h). \textbf{Detecções: 19 findings}, incluindo 100\% das vulnerabilidades críticas de SQL/Command Injection, além de 10 instâncias adicionais não documentadas.
 
 \begin{table}[H]
 \centering
-\caption{Resultados da análise em modo JSON}
-\label{tab:json-mode-results}
-\begin{tabular}{@{}lccccc@{}}
-\toprule
-\textbf{Workflow} & \textbf{Detecções} & \textbf{Esperado} & \textbf{Cobertura} & \textbf{FN} \\ \midrule
-workflow\_1.json & 0 & 2 & 0\% & 2 \\
-workflow\_2.json & 0 & 5 & 0\% & 5 \\
-workflow\_3.json & 0 & 7 & 0\% & 7 \\
-\textbf{TOTAL} & \textbf{0} & \textbf{14} & \textbf{0\%} & \textbf{14 (100\%)} \\ \bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Análise de Causa Raiz}:
-
-Investigação detalhada revelou três limitações técnicas fundamentais. Primeiro, o \textbf{aninhamento profundo} onde o parser JSON do Semgrep falha em aplicar padrões dentro de arrays profundamente aninhados (4+ níveis) e a estrutura típica de workflows n8n (root $\rightarrow$ nodes $\rightarrow$ node $\rightarrow$ parameters) excede esta capacidade. Segundo, o \textbf{comportamento de ellipsis} onde o operador \texttt{...} (correspondência flexível) comporta-se diferentemente em modo JSON comparado a linguagens de código não iterando sobre elementos de arrays conforme necessário. Terceiro, a \textbf{extração de metavariáveis} onde expressões n8n contendo \texttt{\{\{ \$json.field \}\}} não foram corretamente capturadas via \texttt{metavariable-regex} impedindo detecção de injeção.
-
-\textbf{Validação}: Teste com regra mínima (detectar qualquer nó com campo \texttt{"type"}) também produziu zero detecções, confirmando limitação arquitetural, não erro de implementação.
-
-\subsubsection{Fase 2: Modo Genérico (Breakthrough)}
-
-Baseado na análise de causa raiz, pivotou-se para o \textbf{modo genérico} do Semgrep, que trata arquivos JSON como texto plano e aplica correspondência via expressões regulares (regex). Desenvolveram-se 7 regras focadas em padrões textuais específicos.
-
-\textbf{Execução}: Semgrep executou com performance similar (tempo: $\sim$2s/workflow).
-
-\textbf{Detecções}: 19 findings totais, incluindo 100\% das vulnerabilidades críticas documentadas de SQL Injection e Command Injection, além de descoberta de 10 instâncias adicionais não documentadas no ground truth inicial.
-
-A Tabela \ref{tab:generic-mode-results} apresenta os resultados detalhados.
-
-\begin{table}[H]
-\centering
-\caption{Resultados da análise em modo genérico}
-\label{tab:generic-mode-results}
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-\textbf{Workflow} & \textbf{Detecções} & \textbf{Principais Achados} & \textbf{Tempo} \\ \midrule
-workflow\_1.json & 2 & Operações Vault não autorizadas (2x) & 1,8s \\
-workflow\_2.json & 13 & SQL Injection (3 doc + 10 novos) & 2,1s \\
-workflow\_3.json & 4 & PGPASSWORD injection, SSH keys & 1,9s \\
-\textbf{TOTAL} & \textbf{19} & \textbf{6 classes detectadas} & \textbf{5,8s} \\ \bottomrule
-\end{tabular}
-\end{table}
-
-\subsubsection{Comparação Direta: JSON vs. Genérico}
-
-A Tabela \ref{tab:mode-comparison} compara diretamente os dois modos de análise.
-
-\begin{table}[H]
-\centering
-\caption{Comparação JSON mode vs. Generic mode}
+\caption{Comparação JSON mode vs. Generic mode (Semgrep)}
 \label{tab:mode-comparison}
-\begin{tabular}{@{}lcccc@{}}
+\begin{tabular}{@{}lccc@{}}
 \toprule
 \textbf{Métrica} & \textbf{JSON Mode} & \textbf{Generic Mode} & \textbf{Diferença} \\ \midrule
-Regras desenvolvidas & 33 (7 arquivos) & 7 (1 arquivo) & -26 regras \\
+Regras desenvolvidas & 33 & 7 & -26 \\
 Tempo desenvolvimento & 3,75h & 1,2h & -68\% \\
-Detecções totais & 0 & 19 & +19 (infinito) \\
-Cobertura documentada & 0\% (0/14) & 71\% (10/14) & +71 pp \\
-Falsos negativos & 14 (100\%) & 4 (29\%) & -71 pp \\
-Complexidade regras & Alta (AST matching) & Média (regex) & Mais simples \\
-Precisão semântica & Alta (teoricamente) & Baixa (texto plano) & Trade-off \\ \bottomrule
+Detecções totais & 0 & 19 & +19 \\
+Cobertura (wf 1-3) & 0\% (0/14) & 71\% (10/14) & +71 pp \\
+Falsos Positivos & 0 & 0 & = \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-\subsubsection{Cobertura por Classe de Vulnerabilidade}
+\textbf{Cobertura por Classe}: SQL Injection 100\%+, Command Injection 100\%+, Vault Secrets 100\%, SSH Keys 100\%, Hardcoded Passwords 0\% (não priorizado), SSRF/DoS 0\% (requer análise semântica).
 
-A Tabela \ref{tab:coverage-by-class} apresenta a cobertura de detecção por classe de vulnerabilidade, comparando ambos os modos.
-
-\begin{table}[H]
-\centering
-\caption{Cobertura por classe de vulnerabilidade}
-\label{tab:coverage-by-class}
-\begin{tabular}{@{}lcccccc@{}}
-\toprule
-\textbf{Classe} & \textbf{Documentadas} & \multicolumn{2}{c}{\textbf{JSON Mode}} & \multicolumn{2}{c}{\textbf{Generic Mode}} \\
-\cmidrule(lr){3-4} \cmidrule(lr){5-6}
-& & \textbf{Detectadas} & \textbf{Cov.} & \textbf{Detectadas} & \textbf{Cov.} \\ \midrule
-SQL Injection & 3 & 0 & 0\% & 13 & 100\%+ \\
-Command Injection & 2 & 0 & 0\% & 3 & 100\%+ \\
-Vault Secrets & 2 & 0 & 0\% & 2 & 100\% \\
-SSH Key Exposure & 1 & 0 & 0\% & 1 & 100\% \\
-Hardcoded Passwords & 3 & 0 & 0\% & 0 & 0\% \\
-SSRF/DoS & 3 & 0 & 0\% & 0 & 0\% \\
-\textbf{TOTAL} & \textbf{14} & \textbf{0} & \textbf{0\%} & \textbf{19} & \textbf{71\%} \\ \bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Observação Crítica}: Modo genérico detectou 100\%+ em SQL/Command Injection (incluindo instâncias não documentadas), demonstrando sensibilidade adequada. Hardcoded passwords são detectáveis via regras Semgrep com padrões de entropia, mas não foram priorizadas no escopo inicial. SSRF e DoS requerem análise semântica mais sofisticada que regex pura não fornece.
-
-\subsection{Análise de Causa Raiz da Divergência}
-
-A diferença dramática entre os modos (0\% vs. 71\% de cobertura) decorre de incompatibilidades arquiteturais fundamentais entre o paradigma de análise do Semgrep e estruturas LCNC.
-
-\subsubsection{Paradigma Declarativo vs. Imperativo}
-
-\textbf{Código Tradicional (Imperativo)}: Ferramentas SAST analisam fluxo de controle (if/else, loops) e fluxo de dados (variáveis, funções) através de ASTs de linguagens de programação. O Semgrep foi projetado para este paradigma.
-
-\textbf{Workflows n8n (Declarativo)}: Workflows são configurações JSON que \textit{declaram} transformações de dados através de conexões entre nós. Não há controle de fluxo imperativo tradicional. O "código-fonte" é a configuração, não instruções executáveis.
-
-\textbf{Incompatibilidade}: O parser JSON do Semgrep trata workflows como \textit{dados de configuração}, não como \textit{código}, falhando em reconhecer padrões inseguros dentro da estrutura aninhada. O modo genérico, ao tratar JSON como texto, inadvertidamente resolve o problema ao aplicar correspondência de padrões puramente textual, similar a grep avançado.
-
-\subsubsection{Limitação de Profundidade de Aninhamento}
-
-Estrutura típica de vulnerabilidade SQL Injection em n8n:
-
-\begin{verbatim}
-{
-  "nodes": [              // Nível 1
-    {                     // Nível 2
-      "type": "...",
-      "parameters": {     // Nível 3
-        "query": "=..."  // Nível 4 - vulnerabilidade aqui
-      }
-    }
-  ]
-}
-\end{verbatim}
-
-O modo JSON do Semgrep requer navegação via \texttt{pattern-inside} aninhados para alcançar o nível 4, mas esta construção falha em arrays. O modo genérico simplesmente procura pelo texto \texttt{"query": "=} diretamente, ignorando a estrutura hierárquica.
-
-\subsection{Discussão}
-
-Os resultados demonstram que \textbf{a escolha do modo de análise é tão crítica quanto a seleção da ferramenta} para análise de segurança de plataformas LCNC.
-
-\subsubsection{Trade-off: Simplicidade vs. Precisão Semântica}
-
-O modo genérico, embora efetivo (71\% de cobertura), sacrifica compreensão semântica. As \textbf{limitações} incluem não compreender estrutura JSON (pode corresponder strings dentro de comentários ou valores), não poder rastrear fluxo de dados entre nós (taint analysis), e vulnerabilidade a falsos positivos se padrões textuais aparecem em contextos seguros. As \textbf{vantagens} incluem simplicidade (regras são regex compreensíveis, não AST patterns complexos), efetividade empírica (19 detecções vs. 0), desenvolvimento rápido (1,2h vs. 3,75h), e manutenibilidade (atualizar regex é mais simples que reescrever AST patterns).
-
-\textbf{Conclusão}: Para análise de segurança de workflows n8n com Semgrep, o modo genérico é \textit{pragmaticamente superior} ao modo JSON nativo, apesar de teoricamente menos sofisticado. Este resultado contradiz a intuição comum de que "parsing estruturado sempre supera correspondência textual".
-
-\subsubsection{Validação da Hipótese de Pesquisa}
-
-A hipótese central deste trabalho afirmava que ferramentas SAST existentes, com customização, poderiam fornecer análise de segurança para n8n. Os resultados validam parcialmente esta hipótese, mostrando que Semgrep \textit{pode} detectar vulnerabilidades em workflows n8n (71\% de cobertura em modo genérico) embora qualificado pela necessidade de adaptação significativa do modo de análise (não apenas desenvolvimento de regras) e limitado pelo fato de que cobertura de 71\% é insuficiente para ambientes críticos (meta: $\geq$80\%).
-
-\subsubsection{Contribuição Metodológica: AI-Assisted Rule Generation}
-
-A geração assistida por IA (Claude 3.5 Sonnet) demonstrou efetividade com \textbf{aceleração} de 13x mais rápido que desenvolvimento manual (3,75h vs. estimativa de 49h), \textbf{qualidade} produzindo regras sintaticamente corretas e bem documentadas, \textbf{iteração} mostrando que feedback humano é essencial (2-4 iterações por regra), embora com \textbf{limitação} onde IA gerou regras JSON mode que não funcionaram mas pivotou efetivamente para generic mode quando informada da limitação.
-
-\textbf{Lição}: IA acelera desenvolvimento mas não elimina necessidade de validação empírica. A falha completa do modo JSON só foi identificada através de testes reais, não análise teórica.
-
-\subsubsection{Implicações Práticas}
-
-Para equipes de segurança considerando análise SAST de workflows n8n:
-
-\textbf{Recomendação Imediata}: Utilize Semgrep em modo genérico com regras desenvolvidas neste trabalho como baseline. A cobertura de 71\% é superior a 0\% (análise manual ad-hoc).
-
-\textbf{Integração CI/CD}: O modo genérico é adequado para gates automatizados com execução rápida ($\sim$2s por workflow), baixo consumo de recursos (55MB memória), zero falsos positivos observados neste estudo, e bloqueio de SQL/Command Injection (classes mais críticas).
-
-\textbf{Limitações Conhecidas}: Hardcoded passwords são detectáveis com regras Semgrep adicionais (não incluídas no escopo inicial). SSRF e DoS requerem análise semântica avançada, revisão manual complementar, análise dinâmica (execução em sandbox), ou desenvolvimento de ferramenta especializada (proposta na Seção \ref{sec:trabalhos-futuros}).
+\textbf{Descoberta Técnica Crítica}: O modo genérico é \textit{pragmaticamente superior} ao JSON nativo para n8n, contradizendo a intuição de que "parsing estruturado sempre supera correspondência textual". Workflows n8n são configurações declarativas, não código imperativo — o Semgrep trata JSON como dados, não como código.
 
 \subsection{Avaliação com Agentic Radar}
 
-Esta subseção apresenta os resultados da análise experimental utilizando o Agentic Radar, ferramenta especializada em detecção de vulnerabilidades em sistemas de agentes de IA. A análise revela descobertas críticas sobre a efetividade de ferramentas especializadas em contextos específicos versus sua aplicabilidade geral.
-
-\subsubsection{Protocolo Experimental Específico}
-
-O Agentic Radar versão 0.14.0 foi executado em modo \texttt{scan} (análise estática, sem chamadas a APIs externas) sobre os quatro workflows do dataset. A ferramenta foi instalada via \texttt{pip install agentic-radar} e configurada para análise de workflows n8n.
-
-\textbf{Ambiente de execução}: A análise utilizou SPLX Agentic Radar 0.14.0 em modo \texttt{scan} (análise estática local) na plataforma macOS 14.6 com Python 3.9.24, executando o comando \texttt{agentic-radar scan n8n --input-dir <dir> --output-file <file>}.
-
-\textbf{Composição do dataset}: Descoberta crítica durante a análise revelou que apenas 1 dos 4 workflows (25\%) contém agentes de IA, sendo workflows 1-3 com vulnerabilidades tradicionais (SQL Injection, Command Injection, exposição de credenciais) sem agentes de IA, e workflow 4 consistindo em análise automatizada de Pull Requests utilizando Google Vertex AI (Gemini 2.5 Pro/Flash) com 2 agentes de IA.
-
-Esta distribuição representa um cenário realista: a maioria dos workflows n8n em produção não utiliza agentes de IA, focando em automações tradicionais de integração de APIs e processamento de dados.
-
-\subsubsection{Resultados da Análise Estática}
-
-A Tabela \ref{tab:agentic-radar-results} apresenta os resultados da análise por workflow.
+Agentic Radar 0.14.0 em modo \texttt{scan} (análise estática local, sem APIs externas). Descoberta crítica: apenas 1/4 workflows (25\%) contém agentes de IA — cenário realista onde predominam automações tradicionais.
 
 \begin{table}[H]
 \centering
-\caption{Resultados da análise com Agentic Radar por workflow}
+\caption{Resultados Agentic Radar}
 \label{tab:agentic-radar-results}
-\begin{tabular}{@{}lcccp{4.5cm}@{}}
+\begin{tabular}{@{}lcccl@{}}
 \toprule
-\textbf{Workflow} & \textbf{AI} & \textbf{Detecções} & \textbf{Tempo} & \textbf{Principais Achados} \\ \midrule
-workflow\_1 & Não & 30 & 0,66s & Prompt Injection Indireto (30×) \\
-workflow\_2 & Não & 27 & 0,71s & Prompt Injection Indireto (27×) \\
-workflow\_3 & Não & 5 & 0,64s & Prompt Injection Indireto (5×) \\
-workflow\_4 & \textbf{Sim} & \textbf{12} & 1,11s & \textbf{Prompt Inj. (10×), PII (2×)} \\
-\textbf{TOTAL} & \textbf{1/4} & \textbf{74} & \textbf{3,12s} & \textbf{4 TP, 70 FP} \\ \bottomrule
+\textbf{Workflow} & \textbf{AI} & \textbf{Det.} & \textbf{TP/FP} & \textbf{Achados} \\ \midrule
+wf 1-3 & Não & 62 & 0/62 & FP: Indirect Prompt Injection \\
+wf 4 & Sim & 12 & 4/8 & 2 Prompt Inj. direto + 2 PII \\
+\textbf{Total} & 1/4 & 74 & \textbf{4/70} & \textbf{94,6\% FP} \\ \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Descoberta crítica — Taxa de falsos positivos}: A análise revelou taxa de falsos positivos de \textbf{94,6\%} (70 de 74 detecções). Todos os 62 achados nos workflows 1-3 (sem agentes de IA) são falsos positivos, classificando erroneamente requisições HTTP comuns como vulnerabilidades de "Indirect Prompt Injection".
+\textbf{Vulnerabilidades verdadeiras (Workflow 4)}: (1) \textbf{Prompt Injection Direto} — 2 instâncias CRÍTICO, dados de Jira/PRs concatenados em prompts sem sanitização (OWASP LLM01); (2) \textbf{Exposição de PII} — 2 instâncias ALTO, issues e diffs enviados para Google Vertex AI (OWASP LLM06).
 
-\textbf{Análise detalhada por workflow}:
+\textbf{Cobertura}: 100\% em riscos de IA, 0\% em vulnerabilidades tradicionais. Cobertura agregada: 26,7\% (4/15).
 
-\textbf{Workflows 1-3 (sem agentes de IA)}: Apresentaram 62 instâncias de "Indirect Prompt Injection" classificadas como OWASP LLM01, constituindo falsos positivos onde a ferramenta sinaliza qualquer nó HTTP Request como potencial vetor de ataque independentemente da presença de agentes de IA no workflow, resultando em cobertura de vulnerabilidades reais de 0/14 (0\%) sem detectar nenhuma das 14 vulnerabilidades documentadas (SQL Injection, Command Injection, exposição de credenciais).
+\textbf{Limitações Fundamentais}: Taxa FP 94,6\% (inviável para CI/CD automático); zero cobertura em SQL/Command Injection, secrets, SSRF, DoS; heurísticas excessivamente amplas (qualquer HTTP Request = potencial ataque); ausência de taint analysis; relatórios sem priorização ou scores de confiança.
 
-\textbf{Workflow 4 (com 2 agentes de IA)}: Contém nós "AI Agent - Melhora Requisitos Jira" (Gemini 2.5 Flash) e "AI Agent - Analise Req x Dev" (Gemini 2.5 Pro), com 12 detecções total (8 indiretas + 2 diretas + 2 exposição de informação sensível), sendo 4 verdadeiros positivos (2 Prompt Injection direto + 2 Sensitive Information Disclosure) e aproximadamente 8 falsos positivos (Indirect Prompt Injection em nós HTTP genéricos).
-
-\textbf{Vulnerabilidades verdadeiras identificadas no Workflow 4}:
-
-\textbf{1. Prompt Injection Direto (2 instâncias — CRÍTICO)}: Dados não confiáveis (descrições de issues Jira, corpos de Pull Requests, diffs de código) concatenados diretamente em prompts sem sanitização nos nós "AI Agent - Melhora Requisitos Jira" e "AI Agent - Analise Req x Dev", classificado como OWASP LLM01 - Prompt Injection. Cenários de ataque incluem issue Jira maliciosa contendo instruções ocultas para o agente de IA e PR com descrição contendo sequências de escape de prompt, com impactos de manipulação do comportamento do agente, geração de análises incorretas, e potencial exfiltração de informações via respostas do LLM.
-
-\textbf{2. Exposição de Informação Sensível (2 instâncias — ALTO)}: Jira Issues internas (potencialmente contendo PII, segredos de negócio) e diffs de código fonte (propriedade intelectual) enviados para API externa do Google Vertex AI, classificado como OWASP LLM06 - Sensitive Information Disclosure. Preocupações de privacidade incluem conformidade com LGPD (dados de cidadãos brasileiros), exposição de trade secrets, e ausência de controles de residência de dados. Mitigação recomendada inclui implementar redação automática de PII, utilizar modelos auto-hospedados para dados sensíveis, e estabelecer políticas de classificação de dados.
-
-\subsubsection{Cobertura por Classe de Vulnerabilidade}
-
-A Tabela \ref{tab:agentic-radar-coverage} apresenta a cobertura do Agentic Radar mapeada às seis classes de vulnerabilidades identificadas no framework OWASP LCNC Top 10.
-
-\begin{table}[H]
-\centering
-\caption{Cobertura do Agentic Radar por classe de vulnerabilidade}
-\label{tab:agentic-radar-coverage}
-\begin{tabular}{@{}lcccp{5cm}@{}}
-\toprule
-\textbf{Classe} & \textbf{Ground Truth} & \textbf{Detectadas} & \textbf{Cob.} & \textbf{Justificativa} \\ \midrule
-Riscos de IA & 4 (wf4) & 4 & \textbf{100\%} & Especialização efetiva \\
-SQL Injection & 3 (wf2) & 0 & 0\% & Fora do escopo \\
-Command Injection & 2 (wf3) & 0 & 0\% & Fora do escopo \\
-Secret Sprawl & 3 (wf3) & 0 & 0\% & Fora do escopo \\
-SSRF & 1 (wf3) & 0 & 0\% & Fora do escopo \\
-DoS & 2 (wf1-2) & 0 & 0\% & Fora do escopo \\
-\midrule
-\textbf{TOTAL} & \textbf{15} & \textbf{4} & \textbf{26,7\%} & \textbf{Especializado} \\ \bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Observação crítica}: O Agentic Radar alcança \textbf{100\% de cobertura em seu domínio especializado} (vulnerabilidades de agentes de IA), mas \textbf{0\% em vulnerabilidades tradicionais}. A cobertura agregada de 26,7\% reflete a proporção de workflows com agentes de IA no dataset (1/4 = 25\%).
-
-\subsubsection{Análise de Limitações do Agentic Radar}
-
-A análise experimental identificou cinco limitações fundamentais:
-
-\textbf{1. Taxa de falsos positivos extremamente elevada (94,6\%)}: 70 de 74 detecções são falsos positivos, com heurísticas excessivamente amplas onde qualquer nó HTTP Request é sinalizado como potencial vetor de ataque, ausência de consciência de contexto não distinguindo workflows com/sem agentes de IA, e consequente inviabilidade para gates automatizados em CI/CD sem revisão manual substancial.
-
-\textbf{2. Cobertura zero em vulnerabilidades tradicionais}: A ferramenta não detectou nenhuma das 14 vulnerabilidades documentadas em workflows 1-3. Vulnerabilidades como SQL Injection, Command Injection e exposição de credenciais foram completamente invisíveis para a ferramenta. Esta constitui uma limitação arquitetural, não configuracional, pois a ferramenta fundamentalmente não foi projetada para detectar vulnerabilidades OWASP LCNC Top 10 tradicionais.
-
-\textbf{3. Dependência da composição do dataset}: A efetividade da ferramenta é diretamente proporcional à prevalência de agentes de IA nos workflows analisados. Neste estudo, apenas 25\% dos workflows contêm IA, resultando em uma cobertura agregada de 26,7\%. Consequentemente, em ambientes típicos de n8n, onde predominam automações sem IA, a cobertura esperada seria ainda menor.
-
-\textbf{4. Ausência de análise de fluxo de dados (taint analysis)}: A ferramenta não rastreia a propagação de dados não confiáveis através do grafo de execução. Em vez de realizar análise semântica, as detecções baseiam-se em padrões sintáticos como a simples presença de nós HTTP e LLM. Esta abordagem superficial resulta em falsos positivos quando há nós HTTP sem conexão com IA, e potencialmente em falsos negativos quando os fluxos de dados são complexos.
-
-\textbf{5. Relatórios requerem interpretação especializada}: O HTML gerado contém todas as detecções sem filtrar falsos positivos óbvios, exigindo que o analista de segurança valide manualmente cada achado. Adicionalmente, há ausência de scores de confiança ou priorização automática, dificultando ainda mais a triagem dos resultados.
-
-\subsubsection{Relatórios e Explicabilidade}
-
-O Agentic Radar gera relatórios HTML com visualização gráfica interativa do workflow, apresentando um grafo completo de execução com nós coloridos por tipo. A seção de "Findings" lista todas as vulnerabilidades detectadas, fornecendo para cada detecção o nome da vulnerabilidade, descrição técnica, mapeamento aos frameworks OWASP LLM Top 10 e OWASP Agentic, além de recomendações de mitigação. Adicionalmente, oferece exportação opcional em formato JSON estruturado para processamento automatizado.
-
-\textbf{Qualidade das explicações}: Em relação aos aspectos positivos, a ferramenta fornece descrições técnicas claras com alinhamento explícito aos frameworks de segurança reconhecidos (OWASP LLM Top 10), além de recomendações de remediação acionáveis como "Implement guardrails filtering for prompt injection" e "Implement sanitization of HTTP response content". Por outro lado, há limitações importantes: a ferramenta não diferencia detecções de alta e baixa confiança, apresentando todas com igual prominência, e tampouco indica quais detecções são mais prováveis de serem falsos positivos.
-
-\textbf{Comparação com Semgrep}: O Agentic Radar oferece análise holística com visualização de workflow completo e contexto gráfico, enquanto o Semgrep fornece detecções precisas com números de linha exatos e correspondência de padrões textuais. Esta diferença revela uma complementaridade natural: o contexto visual do Agentic Radar combinado com a precisão textual do Semgrep.
-
-\subsection{Análise Comparativa: Semgrep vs. Agentic Radar}
-
-Esta subseção apresenta análise comparativa sistemática das duas ferramentas avaliadas, documentando coberturas complementares, trade-offs e implicações para a abordagem híbrida proposta.
-
-\subsubsection{Comparação de Cobertura por Ferramenta}
-
-A Tabela \ref{tab:comparative-coverage} apresenta comparação detalhada de cobertura, performance e características operacionais.
+\subsection{Análise Comparativa e Abordagem Híbrida}
 
 \begin{table}[H]
 \centering
 \caption{Comparação Semgrep vs. Agentic Radar}
 \label{tab:comparative-coverage}
 \small
-\begin{tabular}{@{}p{3.5cm}p{4.5cm}p{4.5cm}@{}}
+\begin{tabular}{@{}lcc@{}}
 \toprule
-\textbf{Dimensão} & \textbf{Semgrep (Generic Mode)} & \textbf{Agentic Radar} \\ \midrule
-\textbf{Workflows 1-3} & 19 detecções (10 documentadas) & 62 detecções (0 TP, 62 FP) \\
-& Cobertura: 71\% & Cobertura: 0\% \\[0.2cm]
-\textbf{Workflow 4} & Não testado & 12 detecções (4 TP, 8 FP) \\
-& Cobertura: N/A & Cobertura: 100\% em AI \\[0.2cm]
-\textbf{Execução} & 5,8s (3 workflows) & 3,1s (4 workflows) \\
-& Média: 1,9s/workflow & Média: 0,78s/workflow \\[0.2cm]
-\textbf{Instalação} & \texttt{pip install semgrep} & \texttt{pip install agentic-radar} \\
-& Simples, sem deps. ext. & Simples, sem deps. ext. \\[0.2cm]
-\textbf{Privacidade} & Local, sem APIs ext. & Local (scan mode) \\
-& 100\% offline & 100\% offline \\[0.2cm]
-\textbf{Formato Saída} & JSON/SARIF/texto & HTML + JSON \\
-& Parseable & Visual + parseable \\[0.2cm]
-\textbf{Especialização} & Configurável (regex) & Agentes de IA apenas \\
-& Genérica & Especializada \\[0.2cm]
-\textbf{Falsos Positivos} & 0 observados (workflows 1-3) & 70 de 74 (94,6\%) \\
-& Taxa: 0\% & Taxa: 94,6\% \\[0.2cm]
-\textbf{Regras} & Customizadas (7 regras) & Pré-configuradas \\
-& Requer desenvolvimento & Out-of-the-box \\[0.2cm]
-\textbf{Limitações} & Modo JSON inefetivo & FP em workflows sem IA \\
-& Requer modo genérico & Cobertura limitada \\ \bottomrule
+\textbf{Dimensão} & \textbf{Semgrep (Generic)} & \textbf{Agentic Radar} \\ \midrule
+Cobertura wf 1-3 & 71\% (19 det., 10 doc) & 0\% (62 FP) \\
+Cobertura wf 4 (AI) & N/A & 100\% (4 TP) \\
+Falsos Positivos & 0\% & 94,6\% \\
+Execução média & 1,9s/wf & 0,78s/wf \\
+Privacidade & 100\% offline & 100\% offline \\
+Configuração & Requer regras (1,2h + IA) & Out-of-the-box \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-\subsubsection{Análise de Complementaridade}
+\textbf{Complementaridade Perfeita}: Zero sobreposição. Semgrep cobre: SQL Injection, Command Injection, Vault secrets, SSH keys. Agentic Radar cobre: Prompt Injection, PII exposure via LLM.
 
-A análise comparativa revela \textbf{complementaridade perfeita} entre as ferramentas, com sobreposição mínima e sinergia máxima:
+\textbf{Lacunas residuais}: SSRF, DoS, credenciais hardcoded (detectáveis com regras Semgrep adicionais).
 
-\textbf{Semgrep cobre}: SQL Injection (3 instâncias detectadas), Command Injection (3 instâncias detectadas, incluindo 1 não documentada), operações não autorizadas em Vault (2 instâncias) e exposição de chaves SSH (1 instância).
-
-\textbf{Agentic Radar cobre}: Prompt Injection direto em agentes de IA (2 instâncias) e exposição de informação sensível via LLM APIs (2 instâncias).
-
-\textbf{Sobreposição}: Zero. Nenhuma vulnerabilidade foi detectada por ambas as ferramentas simultaneamente, confirmando especialização distinta.
-
-\textbf{Lacunas residuais} (não cobertas pela implementação atual): SSRF potencial (1 instância no workflow 3) e DoS via loops ou operações intensivas (2 instâncias). Credenciais hardcoded em texto plano (3 instâncias no workflow 3) são detectáveis por regras Semgrep específicas, mas não foram incluídas no conjunto inicial de regras.
-
-\subsubsection{Trade-offs Identificados}
-
-\textbf{1. Precisão vs. Abrangência}: O Semgrep apresenta alta precisão (0\% FP) porém cobertura média (71\%), enquanto o Agentic Radar oferece cobertura completa em seu domínio especializado (100\% em IA) mas com precisão baixa (94,6\% FP). Este trade-off implica que o Semgrep é confiável para gates automatizados, ao passo que o Agentic Radar requer revisão manual.
-
-\textbf{2. Configurabilidade vs. Facilidade de Uso}: O Semgrep requer desenvolvimento de regras customizadas (1,2h investidas com IA, 40-60h sem IA), enquanto o Agentic Radar funciona com zero configuração, fornecendo detecções out-of-the-box. Neste trade-off, o Semgrep oferece flexibilidade para adaptar-se a contextos específicos, ao passo que o Agentic Radar oferece conveniência imediata.
-
-\textbf{3. Especialização vs. Generalização}: O Semgrep possui motor genérico adaptável a qualquer padrão via regex, enquanto o Agentic Radar é especializado em agentes de IA e não extensível para outras classes. Este trade-off demonstra que o Semgrep é versátil, ao passo que o Agentic Radar é focado em seu domínio específico.
-
-\subsubsection{Implicações para Abordagem Híbrida}
-
-A análise comparativa valida empiricamente a hipótese da abordagem híbrida: \textbf{nenhuma ferramenta isolada é suficiente}.
-
-\textbf{Semgrep isolado}: Embora detecte 71\% das vulnerabilidades tradicionais, apresenta zero cobertura em riscos de agentes de IA e não testa workflow 4 (AI-enabled). Consequentemente, é inadequado para ambientes com workflows de IA.
-
-\textbf{Agentic Radar isolado}: Apesar de detectar 100\% das vulnerabilidades de agentes de IA, apresenta zero cobertura em vulnerabilidades tradicionais (0/14) e taxa de FP inaceitável (94,6).% Portanto, é inadequado para workflows sem IA (75\% do dataset).
-
-\textbf{Abordagem híbrida (Semgrep + Agentic Radar)}: A combinação alcança cobertura de 14 de 18 vulnerabilidades (77,8\%) com complementaridade notável: zero sobreposição e máxima sinergia. Entretanto, requer filtragem de FP do Agentic Radar (manual ou automatizada). Em síntese, constitui abordagem superior, validando a proposta do trabalho.
+\textbf{Validação da Hipótese}: Nenhuma ferramenta isolada é suficiente. Semgrep isolado = 0\% em IA; Agentic Radar isolado = 0\% em tradicionais + 94,6\% FP. Abordagem híbrida = 77,8\% cobertura (14/18 vulnerabilidades).
 
 \subsection{Resultados da Abordagem Híbrida}
 
@@ -1255,199 +647,61 @@ A avaliação experimental valida \textbf{parcialmente} a hipótese da abordagem
 \section{Discussão}
 \label{sec:discussao}
 
-Esta seção interpreta os resultados experimentais apresentados na Seção \ref{sec:avaliacao}, analisando criticamente o alcance dos objetivos estabelecidos, as limitações identificadas, o posicionamento da abordagem proposta em relação ao estado da arte e as implicações práticas para segurança de plataformas Low-Code/No-Code.
+\subsection{Alcance dos Objetivos e Limitações}
 
-\subsection{Alcance dos Objetivos}
+\textbf{Objetivos Alcançados}: OE1-OE5 foram atingidos integralmente. Análise comparativa documentou coberturas de 16,7\% (Agentic Radar) e 71\% (Semgrep). Metodologia com IA resultou em aceleração de 13x. Desenvolveram-se 7 regras funcionais. Validação empírica produziu cobertura híbrida de 77,8\%. Lacunas (hardcoded credentials, SSRF, DoS) foram documentadas.
 
-A avaliação experimental demonstrou o alcance substancial dos objetivos específicos estabelecidos na Seção \ref{sec:objetivos}, com resultados que validam a viabilidade técnica da abordagem híbrida proposta.
+\textbf{Meta de 80\%}: Não alcançada (77,8\%, déficit de 2,2pp = 1 vulnerabilidade). Desenvolvimento de 2-3 regras adicionais (~30min com IA) elevaria cobertura para 83-89\%.
 
-\textbf{OE1 — Análise Comparativa:} Alcançado integralmente. A análise sistemática documentou cobertura de 16,7\% (Agentic Radar) e 71\% (Semgrep) para vulnerabilidades tradicionais, estabelecendo métricas quantitativas que demonstram complementaridade das ferramentas. A caracterização qualitativa identificou limitações críticas (taxa de FP de 94,6\% no Agentic Radar, falha completa do modo JSON do Semgrep) essenciais para aplicação prática.
+\textbf{Limitações Técnicas}: (1) Modo JSON do Semgrep falhou completamente (0\%) devido a estruturas aninhadas 4+ níveis — modo genérico sacrifica compreensão semântica; (2) Dataset sintético de 4 workflows pode não capturar diversidade de produção; (3) Três classes não cobertas (33\%): credenciais hardcoded (detectáveis com regras adicionais), SSRF (requer taint analysis), DoS (detecção de ciclos); (4) Análise puramente estática não detecta vulnerabilidades de runtime.
 
-\textbf{OE2 — Metodologia com IA:} Alcançado com sucesso. O uso de Claude 3.5 Sonnet para geração assistida de regras Semgrep resultou em aceleração de 13x (1,2h vs. 49h estimadas), demonstrando viabilidade da abordagem. O processo iterativo de refinamento (2-4 iterações por regra) estabeleceu metodologia reproduzível para desenvolvimento futuro.
-
-\textbf{OE3 — Regras Customizadas:} Alcançado. Desenvolveram-se 7 regras funcionais em modo genérico cobrindo SQL Injection, Command Injection, operações não autorizadas em Vault e exposição de chaves SSH. A descoberta crítica da necessidade de usar modo genérico (não JSON) representa contribuição metodológica importante para análise de plataformas LCNC.
-
-\textbf{OE4 — Validação Empírica:} Alcançado. A execução sobre 4 workflows (18 vulnerabilidades totais) produziu cobertura híbrida de 77,8\%, demonstrando efetividade da combinação de ferramentas. Métricas detalhadas (precisão, recall, F1-score) foram calculadas e documentadas.
-
-\textbf{OE5 — Documentação de Lacunas:} Alcançado. Identificaram-se três classes não cobertas (hardcoded credentials, SSRF, DoS) com justificativas técnicas e propostas concretas para trabalhos futuros (Seção \ref{sec:conclusoes}).
-
-\textbf{Meta de Cobertura (80\%):} Não alcançada, mas próxima. A cobertura de 77,8\% ficou 2,2 pontos percentuais abaixo da meta, equivalente a 1 vulnerabilidade adicional. Análise indica que desenvolvimento de 2-3 regras adicionais para detecção de credenciais hardcoded (~30min com IA) elevaria cobertura para 83-89\%, superando a meta estabelecida. O déficit não invalida a viabilidade da abordagem, representando oportunidade de melhoria incremental.
-
-\subsection{Limitações Identificadas}
-
-Este trabalho apresenta limitações técnicas e de segurança que devem ser consideradas ao interpretar os resultados e aplicar a abordagem em contextos práticos.
-
-\subsubsection{Limitações Técnicas}
-
-\textbf{1. Incompatibilidade do Modo JSON:} A falha completa do modo JSON do Semgrep (0\% de cobertura, 33 regras desenvolvidas) representa limitação arquitetural fundamental. Estruturas JSON profundamente aninhadas (4+ níveis), características de plataformas LCNC, excedem capacidades do parser. A solução via modo genérico, embora efetiva, sacrifica compreensão semântica por correspondência textual baseada em regex, limitando capacidades de análise de fluxo de dados (taint analysis).
-
-\textbf{2. Dataset Sintético Limitado:} A validação baseou-se em 4 workflows sintéticos (18 vulnerabilidades), representando contexto controlado que pode não capturar a diversidade de padrões em ambientes de produção. Workflows corporativos frequentemente apresentam complexidade superior (100+ nós, múltiplas ramificações condicionais), cujo comportamento das ferramentas não foi validado neste estudo.
-
-\textbf{3. Cobertura Incompleta:} Três classes de vulnerabilidades permaneceram não cobertas pela implementação atual (hardcoded credentials, SSRF, DoS), representando 33\% das categorias identificadas. Estas lacunas decorrem de: (i) credenciais hardcoded são detectáveis via regras Semgrep com análise de padrões e entropia de strings, mas não foram priorizadas no conjunto inicial; (ii) SSRF necessita rastreamento de fluxo de dados até fontes não confiáveis, desafiador no modo genérico; (iii) DoS exige detecção de ciclos em grafos de execução, além das capacidades de pattern matching.
-
-\textbf{4. Ausência de Análise Dinâmica:} A abordagem puramente estática não detecta vulnerabilidades manifestadas apenas em tempo de execução (race conditions, vulnerabilidades dependentes de estado, ataques de timing). Análise dinâmica complementar seria necessária para cobertura abrangente.
-
-\subsubsection{Limitações de Segurança}
-
-\textbf{1. Taxa Elevada de Falsos Positivos:} O Agentic Radar apresentou taxa de FP de 94,6\% (70 de 74 detecções), inviabilizando uso autônomo em gates de CI/CD sem revisão manual substancial. A heurística excessivamente ampla (qualquer nó HTTP Request sinalizado como vetor de injeção de prompt) demonstra necessidade de refinamento para consciência de contexto.
-
-\textbf{2. Sem Verificação de Integridade de Nós:} Nós customizados da comunidade n8n, instaláveis via npm, não são verificados quanto a vulnerabilidades ou comportamento malicioso. Workflows utilizando nós comprometidos permaneceriam inseguros independentemente da análise SAST dos parâmetros de configuração.
-
-\textbf{3. Limitações de Taint Analysis:} A ausência de rastreamento completo de fluxo de dados através do grafo de execução limita detecção de vulnerabilidades onde dados não confiáveis propagam-se através de múltiplas transformações antes de alcançarem sinks perigosos. O modo genérico do Semgrep detecta padrões sintáticos locais, mas não fluxos complexos.
+\textbf{Limitações de Segurança}: (1) Agentic Radar com 94,6\% FP inviabiliza gates automatizados sem filtragem; (2) Nós customizados da comunidade não verificados; (3) Modo genérico detecta padrões locais, não fluxos complexos de dados.
 
 \subsection{Comparação com Estado-da-Arte}
 
-Este trabalho representa o primeiro estudo sistemático de análise estática de segurança para workflows n8n, preenchendo lacuna crítica identificada na literatura. A Tabela \ref{tab:state-of-art-comparison} posiciona a abordagem proposta em relação a ferramentas existentes e trabalhos relacionados.
+Este é o \textbf{primeiro estudo sistemático} de análise SAST para workflows n8n. Ferramentas tradicionais (SonarQube, Checkmarx, CodeQL) não suportam JSON workflows. A abordagem híbrida alcança 77,8\% de cobertura vs. Agentic Radar isolado (16,7\%) ou Semgrep isolado (71\%).
 
-\begin{table}[H]
-\centering
-\caption{Comparação com estado da arte em SAST para plataformas LCNC}
-\label{tab:state-of-art-comparison}
-\small
-\begin{tabular}{@{}p{3cm}p{2.5cm}p{2cm}p{2cm}p{2.5cm}@{}}
-\toprule
-\textbf{Solução} & \textbf{Cobertura} & \textbf{LCNC} & \textbf{n8n} & \textbf{Características} \\ \midrule
-\textbf{Agentic Radar} & 16,7\% (n8n) & Parcial & Sim & Especializado em riscos de IA, FP 94,6\% \\[0.2cm]
-\textbf{Semgrep} & 71\% (n8n) & Não & Adaptável & Requer regras custom, modo genérico necessário \\[0.2cm]
-\textbf{Abordagem Híbrida (Este trabalho)} & \textbf{77,8\%} & Sim & Sim & Complementar, 100\% vulnerabilidades críticas \\[0.2cm]
-\textbf{SonarQube} & N/A & Não & Não & Código tradicional, sem suporte JSON workflows \\[0.2cm]
-\textbf{Checkmarx} & N/A & Não & Não & Comercial, foco em código imperativo \\[0.2cm]
-\textbf{GitHub CodeQL} & N/A & Não & Não & Linguagens específicas, sem parser n8n \\ \bottomrule
-\end{tabular}
-\end{table}
+\textbf{Diferenciais}: (1) Validação empírica de SAST para n8n; (2) Descoberta de que modo genérico supera JSON (71\% vs 0\%); (3) Metodologia de IA com aceleração 13x; (4) Arquitetura híbrida com complementaridade perfeita.
 
-\textbf{Diferencial deste trabalho:} Até o momento, não existe ferramenta dedicada ou estudo acadêmico documentando análise SAST para workflows n8n. A literatura (OWASP LCNC Top 10, análise de workflows n8n) identifica o problema, mas soluções práticas estavam ausentes. Este trabalho contribui primeiramente com a validação empírica de análise estática em workflows n8n, alcançando 77,8\% de cobertura. Adicionalmente, estabelece descoberta metodológica crítica ao demonstrar que o modo genérico é superior ao modo JSON para estruturas LCNC (0\% vs 71\%). Além disso, propõe metodologia de IA para desenvolvimento de regras, resultando em aceleração de 13x com Claude 3.5 Sonnet. Finalmente, valida empiricamente a arquitetura híbrida, demonstrando complementaridade entre Agentic Radar e Semgrep.
+\subsection{Trade-offs e Implicações Práticas}
 
-Trabalhos relacionados em outras plataformas LCNC (Power Automate, Zapier) não foram identificados na literatura acadêmica, sugerindo que esta área de pesquisa está em estágio inicial de desenvolvimento.
+\textbf{Trade-offs}: Semgrep = alta precisão (0\% FP), adequado para CI/CD automatizado; Agentic Radar = recall em IA (100\%), mas 94,6\% FP requer revisão manual. Combinação otimiza: Semgrep para gates + Agentic Radar para análise auxiliar. Privacidade preservada em modo scan (100\% offline); modo test requer envio para OpenAI.
 
-\subsection{Trade-offs Segurança vs. Usabilidade}
-
-A abordagem híbrida proposta envolve compromissos fundamentais entre segurança, usabilidade e operacionalidade que merecem análise crítica.
-
-\textbf{1. Precisão vs. Recall (Semgrep 100\%/71\% vs. Agentic Radar 5,4\%/22\%):} O Semgrep prioriza precisão (zero FP observados em workflows 1-3), adequado para gates automatizados de CI/CD que bloqueiam merges. O Agentic Radar prioriza recall (detecta 100\% das vulnerabilidades em seu domínio especializado), mas ao custo de 94,6\% de FP, exigindo revisão manual. A escolha híbrida combina ambos: Semgrep para detecções confiáveis automatizadas + Agentic Radar para análise auxiliar com validação humana.
-
-\textbf{2. Configurabilidade vs. Facilidade de Uso:} O Semgrep requer investimento inicial de desenvolvimento de regras customizadas (1,2h com IA, 40-60h sem IA), mas oferece flexibilidade total para adaptar-se a novos padrões. O Agentic Radar funciona out-of-the-box sem configuração, mas não é extensível para vulnerabilidades fora de seu escopo especializado. Para organizações com equipes de segurança dedicadas, o trade-off favorece Semgrep (customizável); para equipes pequenas, Agentic Radar oferece valor imediato.
-
-\textbf{3. Privacidade vs. Funcionalidade:} Ambas as ferramentas operam localmente em modo scan, preservando privacidade (crítico para conformidade LGPD). Entretanto, o modo test do Agentic Radar requer envio de workflows para API da OpenAI, criando trade-off: funcionalidade avançada (testes adversariais com LLM) vs. exposição de lógica proprietária. Organizações com requisitos rigorosos de privacidade devem limitar-se ao modo scan.
-
-\textbf{4. IA como Acelerador vs. Validação Manual:} A geração assistida de regras com Claude 3.5 Sonnet acelera desenvolvimento em 13x, mas não elimina necessidade de validação empírica. Das 33 regras geradas para modo JSON, nenhuma funcionou (0\% cobertura), demonstrando que IA reduz overhead mas não substitui expertise técnica. O trade-off otimizado: IA para geração inicial + validação rigorosa com workflows de teste.
-
-\subsection{Implicações Práticas}
-
-Os resultados deste trabalho têm implicações diretas para diferentes stakeholders e para o desenvolvimento de políticas públicas relacionadas à segurança de plataformas LCNC.
-
-\subsubsection{Para Usuários/Stakeholders}
-
-\textbf{Equipes de Segurança:} A abordagem híbrida é viável para integração em pipelines de CI/CD, com tempo de execução aceitável (6-8s por workflow) e capacidade de bloquear automaticamente vulnerabilidades críticas (SQL/Command Injection, Prompt Injection). Recomenda-se configuração de gates condicionais: bloqueio para severidade BLOCKER, alertas para CRITICAL, informação para WARNING.
-
-\textbf{Desenvolvedores Cidadãos:} A disponibilização de análise SAST automatizada eleva conscientização sobre riscos de segurança em workflows. Mensagens explicativas das ferramentas (mapeamento OWASP, exemplos de código corrigido) funcionam como material educacional integrado ao fluxo de desenvolvimento, reduzindo lacuna de conhecimento identificada na literatura.
-
-\textbf{Organizações:} A solução permite estabelecer governança de workflows n8n através de políticas automatizadas, endereçando lacuna crítica onde "código-fonte" (JSON) não estava sujeito ao mesmo rigor que plataforma subjacente. Particularmente relevante para conformidade LGPD \cite{lgpd_lei}, considerando que workflows frequentemente processam dados pessoais sensíveis de cidadãos brasileiros.
-
-\textbf{Treinamento Necessário:} Analistas de segurança requerem treinamento em interpretação de resultados do Agentic Radar (distinção FP/TP), configuração de regras Semgrep e análise de workflow JSON. Estimativa: 4-8 horas de capacitação técnica.
-
-\subsubsection{Para Políticas Públicas}
-
-\textbf{Conformidade Regulatória (LGPD):} Workflows n8n que processam dados pessoais devem implementar medidas de segurança técnicas apropriadas (Art. 46, LGPD \cite{lgpd_art46}). A análise SAST automatizada constitui controle preventivo que auxilia organizações a demonstrar conformidade, particularmente em processos de tratamento de dados sensíveis (saúde, dados financeiros).
-
-\textbf{Padronização de Análise de Segurança LCNC:} A ausência de padrões e ferramentas para plataformas LCNC representa lacuna que afeta organizações públicas e privadas. Este trabalho demonstra viabilidade técnica, sugerindo oportunidade para desenvolvimento de frameworks nacionais de segurança para automações empresariais, alinhados com estratégias de transformação digital do governo brasileiro.
-
-\textbf{Incentivo à Pesquisa:} A área de segurança em plataformas LCNC está em estágio inicial, conforme evidenciado pela ausência de trabalhos relacionados na literatura. Agências de fomento (CNPq, CAPES, FAPESP) poderiam priorizar linhas de pesquisa em análise de segurança para plataformas emergentes, considerando crescente adoção no setor público e privado nacional.
+\textbf{Implicações}: Equipes de segurança podem integrar em CI/CD (6-8s/workflow) com gates condicionais (BLOCKER/CRITICAL/WARNING). Organizações estabelecem governança de workflows atendendo Art. 46 LGPD \cite{lgpd_art46}. Desenvolvedores cidadãos recebem feedback educacional integrado. Treinamento estimado: 4-8h para analistas.
 
 % ==== Seção 9: Conclusões ====
 \section{Conclusões e Próximos Passos}
 \label{sec:conclusoes}
 
-Este trabalho validou empiricamente a viabilidade técnica de análise estática de segurança para workflows n8n através de abordagem híbrida combinando ferramentas complementares. A investigação demonstrou que análise SAST de estruturas JSON declarativas é possível e efetiva, alcançando cobertura de 77,8\% das vulnerabilidades identificadas. Contribuições metodológicas, técnicas e científicas foram estabelecidas, posicionando o trabalho como primeiro estudo sistemático de segurança para esta plataforma LCNC emergente. Esta seção sintetiza as evidências, documenta contribuições, propõe trabalhos futuros em três horizontes temporais e oferece recomendações práticas para diferentes stakeholders.
-
-\subsection{Síntese das Evidências}
-
-A validação experimental estabeleceu cinco conclusões fundamentais que respondem às questões de pesquisa formuladas:
-
-\textbf{1. Viabilidade Técnica Demonstrada:} A análise estática de workflows n8n em formato JSON é viável, alcançando cobertura híbrida de 77,8\% (14 de 18 vulnerabilidades). Embora inferior à meta de 80\%, o resultado demonstra aplicabilidade prática e representa melhoria substancial sobre ausência de ferramentas (baseline de 0\%).
-
-\textbf{2. Descoberta Crítica — Modo Genérico vs. JSON:} A falha completa do modo JSON do Semgrep (0\% de cobertura, 33 regras desenvolvidas) contrastada com sucesso do modo genérico (71\% de cobertura, 7 regras) representa contribuição metodológica importante. Estruturas JSON profundamente aninhadas características de plataformas LCNC requerem adaptação de ferramentas SAST tradicionais: correspondência textual via regex supera parsing AST para este paradigma declarativo.
-
-\textbf{3. IA como Acelerador Validado:} O uso de Claude 3.5 Sonnet para geração assistida de regras Semgrep resultou em aceleração de 13x (1,2h vs. 49h estimadas manualmente). Entretanto, a falha das regras JSON demonstra que IA reduz overhead mas não elimina necessidade de validação empírica rigorosa. Processo iterativo de refinamento (2-4 iterações por regra) é essencial.
-
-\textbf{4. Complementaridade Perfeita:} Agentic Radar e Semgrep apresentam zero sobreposição de cobertura, validando hipótese da abordagem híbrida. Agentic Radar detecta 100\% das vulnerabilidades de agentes de IA (4/4), enquanto Semgrep detecta 71\% das vulnerabilidades tradicionais (10/14). A combinação maximiza cobertura ao custo de gerenciar 94,6\% de taxa de FP do Agentic Radar.
-
-\textbf{5. Lacuna Científica Preenchida:} Este é o primeiro trabalho a documentar sistematicamente análise SAST para workflows n8n com validação experimental. A ausência de trabalhos relacionados para n8n ou outras plataformas LCNC na literatura acadêmica posiciona esta pesquisa como uma ótima contribuição em área emergente de segurança cibernética.
+Este trabalho validou empiricamente a viabilidade técnica de análise estática de segurança para workflows n8n através de abordagem híbrida, alcançando cobertura de 77,8\% (14/18 vulnerabilidades). Cinco conclusões fundamentais emergem: (1) viabilidade demonstrada; (2) modo genérico supera JSON (71\% vs 0\%); (3) IA acelera desenvolvimento 13x; (4) Agentic Radar e Semgrep apresentam complementaridade perfeita; (5) primeiro estudo sistemático de SAST para n8n na literatura.
 
 \subsection{Contribuições}
 
-Este trabalho oferece contribuições em quatro dimensões que avançam o estado da arte em segurança de plataformas LCNC:
-
-\textbf{1. Contribuição Metodológica — Geração Assistida de Regras por IA:} Desenvolvimento de metodologia sistemática para geração de regras Semgrep utilizando Claude 3.5 Sonnet, incluindo estruturação de prompts em três componentes (contexto do esquema n8n, objetivo de detecção, formato YAML), processo iterativo de refinamento (2-4 iterações por regra) e validação empírica obrigatória. A aceleração de 13x demonstrada (1,2h vs. 49h) estabelece precedente para aplicação de IA generativa em desenvolvimento de conhecimento de segurança, reproduzível para outras plataformas LCNC.
-
-\textbf{2. Contribuição Técnica — Regras Funcionais e Descoberta Arquitetural:} Desenvolvimento de 7 regras Semgrep validadas em modo genérico cobrindo SQL Injection, Command Injection, operações não autorizadas em Vault e exposição de chaves SSH, disponibilizadas como artefato reproduzível. A descoberta crítica de que modo genérico supera modo JSON para estruturas LCNC profundamente aninhadas (71\% vs. 0\% de cobertura) representa insight arquitetural importante: ferramentas SAST tradicionais requerem adaptação ao paradigma declarativo de configuração-como-código.
-
-\textbf{3. Contribuição Científica — Validação Empírica de SAST para LCNC:} Primeiro estudo a documentar sistematicamente aplicação de ferramentas SAST a workflows n8n com validação experimental rigorosa (4 workflows, 18 vulnerabilidades, métricas quantitativas de precisão/recall). A caracterização detalhada de limitações (taxa de FP 94,6\% do Agentic Radar, incompatibilidade do modo JSON, lacunas em 33\% das classes) fornece base empírica para pesquisas futuras e estabelece baseline para comparações.
-
-\textbf{4. Contribuição Prática — Workflow de Integração CI/CD:} Proposta de arquitetura de integração para pipelines de desenvolvimento, incluindo execução paralela de ferramentas (redução de 8,9s para 5,8s), filtragem inteligente de falsos positivos (redução de 94,6\% para 34,8\%), classificação por severidade (BLOCKER/CRITICAL/WARNING) e gates condicionais. O workflow proposto é diretamente aplicável por organizações que utilizam n8n em produção, endereçando lacuna prática de governança de automações.
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item \textbf{Metodológica}: Geração de regras Semgrep com Claude 3.5 Sonnet (aceleração 13x, processo iterativo 2-4 iterações/regra)
+    \item \textbf{Técnica}: 7 regras validadas em modo genérico + descoberta de que modo genérico supera JSON para LCNC
+    \item \textbf{Científica}: Primeiro estudo com validação empírica (4 workflows, 18 vulnerabilidades, métricas quantitativas)
+    \item \textbf{Prática}: Arquitetura CI/CD com execução paralela, filtragem de FP (94,6\% $\rightarrow$ 34,8\%), gates condicionais
+\end{itemize}
 
 \subsection{Trabalhos Futuros}
 \label{sec:trabalhos-futuros}
 
-Os resultados obtidos abrem oportunidades concretas de extensão e melhoria em três horizontes temporais, desde melhorias incrementais imediatas até desenvolvimento de ferramentas dedicadas de longo prazo.
+\textbf{Curto Prazo (3-6 meses)}: (1) Expansão de 3-4 regras para credenciais hardcoded, SSRF básico, DoS (cobertura $\rightarrow$ 83-89\%); (2) Heurística para filtrar FP do Agentic Radar em workflows sem IA (94,6\% $\rightarrow$ 34,8\%); (3) Validação com dataset corporativo (50-100 workflows); (4) Publicação das regras em repositório GitHub (licença MIT).
 
-\subsubsection{Curto Prazo (3-6 meses)}
+\textbf{Médio Prazo (6-12 meses)}: Registro comunitário de regras Semgrep para n8n inspirado no \url{https://semgrep.dev/r}, com regras categorizadas por OWASP LCNC Top 10, dataset de teste público, e pipeline de validação automática de contribuições.
 
-Melhorias incrementais focadas em elevar cobertura e reduzir falsos positivos, aplicáveis com esforço limitado:
-
-\textbf{1. Expansão de Regras para Classes Não Cobertas:} Desenvolvimento de 3-4 regras Semgrep adicionais para detecção de credenciais hardcoded (análise de entropia de strings em campos \texttt{password}/\texttt{apiKey}), SSRF básico (URLs dinâmicas sem validação em nós HTTP Request) e DoS por loops (detecção de conexões cíclicas no grafo de workflow). Esforço estimado: 1-2h com IA, elevando cobertura de 77,8\% para 83-89\%.
-
-\textbf{2. Redução de Falsos Positivos do Agentic Radar:} Implementação de heurística de consciência de contexto que filtra detecções de "Indirect Prompt Injection" em workflows sem nós de IA identificados. Análise preliminar indica que esta filtragem simples reduziria taxa de FP de 94,6\% para ~34,8\% (eliminação de 62 de 70 FP), tornando ferramenta viável para uso automatizado com revisão manual limitada.
-
-\textbf{3. Validação com Dataset Real de Produção:} Execução das ferramentas sobre dataset de workflows corporativos reais (target: 50-100 workflows de organizações parceiras), permitindo validação de performance em workflows complexos (100+ nós), identificação de padrões não capturados pelo dataset sintético e calibração de regras para redução de falsos positivos/negativos em contexto produtivo.
-
-\textbf{4. Publicação de Conjunto de Regras:} Disponibilização pública das 7 regras Semgrep desenvolvidas em repositório GitHub com documentação (README, exemplos de uso, instruções de instalação), dataset de workflows de teste para validação comunitária e licença permissiva (MIT) para facilitar adoção e contribuições. Objetivo: estabelecer baseline comunitário para segurança de workflows n8n.
-
-\subsubsection{Médio Prazo (6-12 meses)}
-
-\textbf{Desenvolvimento de Registro de Regras Comunitário para n8n}
-
-Inspirado pelo modelo de sucesso do registro público de regras Semgrep (\url{https://semgrep.dev/r}), que oferece conjuntos de regras específicos para dezenas de linguagens de programação e frameworks, propõe-se o desenvolvimento de um registro análogo específico para workflows n8n. Este registro centralizaria regras de detecção de vulnerabilidades desenvolvidas pela comunidade, categorizadas por classe de vulnerabilidade (OWASP LCNC Top 10) e validadas contra workflows de teste.
-
-O repositório \texttt{n8n-CyberSecurity-Workflows} \cite{n8n_cybersecurity_workflows} demonstra interesse comunitário significativo em automação de segurança com n8n, sugerindo que uma iniciativa de regras compartilhadas teria adoção prática. A metodologia de geração assistida por IA desenvolvida neste trabalho poderia acelerar a criação inicial do registro, reduzindo a barreira de entrada para contribuições.
-
-\textbf{Componentes principais}: Repositório Git com regras Semgrep em modo genérico validadas, documentação de cada regra com exemplos de código vulnerável e seguro, dataset de teste público com workflows contendo vulnerabilidades conhecidas, pipeline de CI/CD para validação automática de contribuições comunitárias, e integração com gerenciador de pacotes (npm/pip) para distribuição fácil.
-
-\subsubsection{Longo Prazo (1-2 anos)}
-
-\textbf{Ferramenta SAST Dedicada para Workflows n8n}
-
-A longo prazo, propõe-se o desenvolvimento de uma ferramenta SAST especializada para o ecossistema n8n, inspirada no sucesso do Semgrep mas otimizada especificamente para a estrutura JSON declarativa de workflows. Enquanto o Semgrep em modo genérico demonstrou efetividade neste trabalho (71\% de cobertura), uma ferramenta dedicada poderia oferecer capacidades superiores através de compreensão nativa do esquema n8n.
-
-\textbf{Diferencial competitivo vs. Semgrep genérico}: \textbf{Parser nativo do esquema n8n} com compreensão semântica de nós, parâmetros e conexões permitindo análise de fluxo de dados (taint analysis) através do grafo de execução, \textbf{regras pré-configuradas} com conjunto abrangente de regras para as seis classes de vulnerabilidades mantido e atualizado pela comunidade, \textbf{integração CI/CD nativa} com plugin para GitHub Actions, GitLab CI e Jenkins que bloqueia automaticamente merges de workflows vulneráveis, \textbf{interface visual} com dashboard web mostrando postura de segurança de workflows organizacionais e tendências temporais, e \textbf{análise incremental} com detecção de mudanças entre versões de workflows reportando apenas novas vulnerabilidades introduzidas.
-
-\textbf{Modelo de distribuição:}
-
-Seguindo o modelo bem-sucedido do Semgrep, propõe-se arquitetura híbrida open-source + SaaS com \textbf{core open-source (MIT License)} incluindo motor de análise, regras comunitárias e CLI para execução local mantendo transparência e permitindo auto-hospedagem para organizações com requisitos rigorosos de privacidade, e \textbf{SaaS opcional (freemium)} oferecendo dashboard colaborativo, agregação histórica, gerenciamento centralizado de políticas e integração com plataformas n8n Cloud cobrando apenas por funcionalidades de equipe.
-
-Esta dualidade garante acessibilidade (pesquisadores e pequenas organizações utilizam versão gratuita) enquanto cria modelo de sustentabilidade financeira que viabiliza desenvolvimento contínuo e suporte empresarial.
-
-\textbf{Integração no pipeline de desenvolvimento n8n:}
-
-A ferramenta seria integrada diretamente no fluxo de trabalho de desenvolvimento de workflows através de \textbf{pre-commit hook} com análise local antes de commit alertando desenvolvedor imediatamente sobre vulnerabilidades introduzidas, \textbf{pull request checks} com bloqueio automático de PRs contendo vulnerabilidades críticas e comentários inline identificando padrões inseguros e sugerindo correções, \textbf{deploy gate} com validação final antes de implantação em produção e políticas configuráveis por ambiente (desenvolvimento permite warnings, produção bloqueia errors), e \textbf{monitoramento contínuo} com escaneamento periódico de workflows existentes em produção identificando vulnerabilidades introduzidas por mudanças na plataforma n8n ou descoberta de novos vetores de ataque.
-
-\textbf{Sustentabilidade e governança:}
-
-Inspirado em projetos open-source bem-sucedidos como Semgrep e GitLab, implementa-se governança comunitária através de comitê técnico com representantes de organizações usuárias, roadmap público com priorização transparente de funcionalidades, processo formal de contribuição com revisão por pares e CI/CD rigoroso, documentação abrangente incluindo guias de contribuição e arquitetura técnica, e financiamento híbrido através de patrocínios corporativos, receita SaaS e grants de pesquisa.
-
-Esta visão de longo prazo posiciona a ferramenta como padrão de facto para análise de segurança de workflows n8n, similar ao papel que o Semgrep desempenha para código tradicional, elevando significativamente a maturidade de segurança do ecossistema LCNC.
+\textbf{Longo Prazo (1-2 anos)}: Ferramenta SAST dedicada para n8n com parser nativo do esquema, taint analysis através do grafo de execução, regras pré-configuradas, integração CI/CD nativa (GitHub Actions, GitLab CI), dashboard visual e análise incremental. Modelo híbrido open-source (core MIT) + SaaS (funcionalidades de equipe).
 
 \subsection{Recomendações}
 
-Com base nos resultados experimentais e limitações identificadas, recomenda-se aos diferentes stakeholders:
+\textbf{Equipes de Segurança}: Adotar abordagem híbrida em CI/CD com gates condicionais (BLOCKER: SQL/Command/Prompt Injection $\rightarrow$ bloqueio automático; CRITICAL: credenciais/PII $\rightarrow$ revisão manual). Treinamento: 4-8h para analistas.
 
-\textbf{Para Equipes de Segurança Organizacionais:} Adotar abordagem híbrida (Semgrep + Agentic Radar) em pipelines de CI/CD, configurando gates condicionais que bloqueiam vulnerabilidades BLOCKER (SQL/Command/Prompt Injection) automaticamente e requerem revisão manual para CRITICAL (exposição de credenciais, PII). Implementar execução paralela das ferramentas para minimizar impacto no tempo de build (5-8s por workflow). Investir 4-8h em treinamento de analistas para interpretação de resultados e distinção de falsos positivos.
+\textbf{Desenvolvedores n8n}: Integrar SAST via pre-commit hooks e PR checks. Utilizar as 7 regras desenvolvidas como baseline. Estabelecer políticas de governança exigindo análise antes de deploy, especialmente para workflows com dados sensíveis (LGPD \cite{lgpd_lei}).
 
-\textbf{Para Desenvolvedores e Administradores de n8n:} Integrar análise SAST no fluxo de desenvolvimento através de pre-commit hooks locais (feedback imediato) e validação em pull requests (bloqueio de merges vulneráveis). Utilizar as 7 regras Semgrep desenvolvidas neste trabalho como baseline, expandindo conforme necessidades organizacionais específicas. Estabelecer políticas de governança que exijam análise SAST antes de implantação de workflows em produção, particularmente para workflows que processam dados sensíveis sujeitos à LGPD \cite{lgpd_lei}.
+\textbf{Pesquisadores}: Explorar taint analysis em grafos de workflow, análise dinâmica complementar, extensão para outras plataformas LCNC (Power Automate, Zapier, Make), e técnicas de parsing conscientes de esquema.
 
-\textbf{Para Pesquisadores e Acadêmicos:} Explorar análise de fluxo de dados (taint analysis) através do grafo de execução de workflows para detectar propagação de dados não confiáveis através de múltiplas transformações. Investigar análise dinâmica complementar (execução em sandbox) para detectar vulnerabilidades manifestadas apenas em runtime. Estender abordagem para outras plataformas LCNC (Power Automate, Zapier, Make) para estabelecer frameworks gerais de segurança para paradigma declarativo. Desenvolver técnicas de análise estática conscientes de esquema que superem limitações de parsing JSON identificadas neste trabalho.
-
-\textbf{Para a Comunidade n8n e Open-Source:} Contribuir com desenvolvimento de regras Semgrep adicionais no registro comunitário proposto, compartilhando conhecimento de padrões inseguros identificados em contextos de uso específicos. Criar e manter dataset público de workflows de teste contendo vulnerabilidades conhecidas para validação de ferramentas. Estabelecer boas práticas de segurança documentadas (security guidelines) para desenvolvimento de workflows, reduzindo lacuna de conhecimento dos "desenvolvedores cidadãos" identificada na literatura.
+\textbf{Comunidade Open-Source}: Contribuir regras ao registro comunitário, criar/manter datasets de teste públicos, e documentar security guidelines para "desenvolvedores cidadãos".
 
 % ==== Bibliografia ====
 \printbibliography
